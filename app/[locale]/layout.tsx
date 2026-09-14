@@ -1,3 +1,4 @@
+
 import "@/styles/globals.css";
 import { type Metadata, type Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
@@ -9,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { SOSButton } from "@/components/layout/SOSButton";
 import { locales, type Locale } from "@/i18n";
+
 
 // ─── Static params for next-intl ──────────────────────────────────────────────
 export function generateStaticParams() {
@@ -60,6 +62,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+const exceptNavbar = ["/login", "/register"];
+
 // ─── Root Layout ──────────────────────────────────────────────────────────────
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -81,6 +85,7 @@ export default async function RootLayout({
   ).default;
 
   const session = await auth();
+
 
   return (
     <html lang={locale} suppressHydrationWarning>

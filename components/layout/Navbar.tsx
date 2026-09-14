@@ -41,6 +41,7 @@ const menuMotion = {
 };
 
 export function Navbar({ locale }: NavbarProps) {
+  
   const t = useTranslations("nav");
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -72,6 +73,14 @@ export function Navbar({ locale }: NavbarProps) {
   const motionProps = reduceMotion ? {} : menuMotion;
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
+
+  const exceptNavbar = ["/login", "/register"];
+
+  const isExceptNavbar = exceptNavbar.includes(pathname);
+
+  if (isExceptNavbar) {
+    return null;
+  }
 
   return (
     <nav
