@@ -1,0 +1,615 @@
+// ============================================================
+// PetHealthcare Platform — Production Prisma Schema
+// PostgreSQL + PostGIS (geospatial) + pg_trgm (fuzzy search)
+// ============================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis(version: "3.3.2"), pg_trgm, unaccent, uuid_ossp(map: "uuid-ossp")]
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  OWNER
+  VET
+  CLINIC_ADMIN
+  SYSTEM_ADMIN
+}
+
+enum Species {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  HAMSTER
+  REPTILE
+  FISH
+  FERRET
+  GUINEA_PIG
+  OTHER
+}
+
+enum ClinicStatus {
+  AVAILABLE    // Đang hoạt động bình thường
+  BUSY         // Đang đông khách
+  EMERGENCY    // Trực cấp cứu 24/7
+  CLOSED       // Đóng cửa
+}
+
+enum BloodType {
+  // Canine blood types
+  DEA1_POSITIVE
+  DEA1_NEGATIVE
+  DEA3
+  DEA4
+  DEA5
+  DEA7
+  // Feline blood types
+  FELINE_A
+  FELINE_B
+  FELINE_AB
+  // Other/Unknown
+  UNKNOWN
+}
+
+enum ReminderType {
+  VACCINATION
+  DEWORMING
+  FLEA_TICK_PREVENTION
+  HEALTH_CHECKUP
+  DENTAL_CLEANING
+  MEDICATION
+  GROOMING
+  CUSTOM
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum ConsultationType {
+  IN_PERSON
+  TELE_VET_VIDEO
+  TELE_VET_CHAT
+  EMERGENCY
+  FOLLOW_UP
+}
+
+enum RecordType {
+  DIAGNOSIS
+  SURGERY
+  DENTAL
+  VACCINATION
+  DEWORMING
+  LAB_RESULT
+  IMAGING
+  PRESCRIPTION
+  PROGRESS_NOTE
+  DISCHARGE_SUMMARY
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  SMS
+  IN_APP
+}
+
+enum DonorStatus {
+  ELIGIBLE
+  INELIGIBLE
+  ON_HOLD
+  PENDING_REVIEW
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH MODELS (NextAuth.js v5 / Auth.js compatible)
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  phone         String?   @unique
+  phoneVerified Boolean   @default(false)
+  passwordHash  String?
+  role          Role      @default(OWNER)
+  isActive      Boolean   @default(true)
+  locale        String    @default("vi")
+  pushToken     String?   // Web Push subscription JSON
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  pets          Pet[]
+  clinic        Clinic?         @relation("ClinicAdmin")
+  vetProfile    Vet?
+  notifications Notification[]
+  appointments  Appointment[]   @relation("PatientAppointments")
+
+  @@index([email])
+  @@index([phone])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model SmsOtp {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@map("sms_otps")
+}
+
+// ─────────────────────────────────────────────────────────────
+// VET PROFILE
+// ─────────────────────────────────────────────────────────────
+
+model Vet {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  licenseNumber   String    @unique
+  specializations Species[]
+  isExoticSpec    Boolean   @default(false)
+  clinicId        String?
+  bio             String?   @db.Text
+  yearsExperience Int       @default(0)
+  avatarUrl       String?
+  isVerified      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic         Clinic?        @relation(fields: [clinicId], references: [id])
+  medicalRecords MedicalRecord[]
+  appointments   Appointment[]
+
+  @@index([clinicId])
+  @@map("vets")
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLINIC
+// ─────────────────────────────────────────────────────────────
+
+model Clinic {
+  id              String      @id @default(cuid())
+  adminUserId     String      @unique
+  name            String
+  nameUnaccented  String      // For pg_trgm fuzzy search
+  slug            String      @unique
+  description     String?     @db.Text
+  address         String
+  district        String?
+  city            String      @default("Hà Nội")
+  phone           String
+  email           String?
+  website         String?
+  logoUrl         String?
+  coverImageUrl   String?
+  imageUrls       String[]
+  status          ClinicStatus @default(AVAILABLE)
+  isVerified      Boolean     @default(false)
+  is24h           Boolean     @default(false)
+  isExoticSpec    Boolean     @default(false)
+  specializations Species[]
+  openingHours    Json?       // { mon: { open: "08:00", close: "18:00" }, ... }
+  rating          Float       @default(0)
+  reviewCount     Int         @default(0)
+  // PostGIS spatial point — longitude/latitude
+  // Stored as Unsupported to work with raw PostGIS queries
+  location        Unsupported("geometry(Point, 4326)")?
+  latitude        Float?
+  longitude       Float?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  admin        User          @relation("ClinicAdmin", fields: [adminUserId], references: [id])
+  vets         Vet[]
+  appointments Appointment[]
+  petRecords   MedicalRecord[]
+  bloodRequests BloodRequest[]
+
+  @@index([city])
+  @@index([isVerified])
+  @@index([is24h])
+  @@index([isExoticSpec])
+  // pg_trgm GIN index — created via raw SQL migration
+  @@map("clinics")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PET & MEDICAL PASSPORT
+// ─────────────────────────────────────────────────────────────
+
+model Pet {
+  id             String    @id @default(cuid())
+  ownerId        String
+  name           String
+  species        Species
+  breed          String?
+  color          String?
+  dateOfBirth    DateTime?
+  gender         String?   // male | female | unknown
+  isNeutered     Boolean   @default(false)
+  microchipId    String?   @unique
+  passportNumber String    @unique @default(cuid())
+  avatarUrl      String?
+  bloodType      BloodType @default(UNKNOWN)
+  weight         Float?    // Current weight in kg
+  notes          String?   @db.Text
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  weightHistory  WeightRecord[]
+  medicalRecords MedicalRecord[]
+  vaccinations   Vaccination[]
+  prescriptions  Prescription[]
+  reminders      Reminder[]
+  bloodDonor     BloodDonorProfile?
+  appointments   Appointment[]
+
+  @@index([ownerId])
+  @@index([microchipId])
+  @@index([species])
+  @@map("pets")
+}
+
+model WeightRecord {
+  id        String   @id @default(cuid())
+  petId     String
+  weight    Float    // kg
+  recordedAt DateTime @default(now())
+  recordedBy String? // Vet or owner name
+  notes     String?
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@map("weight_records")
+}
+
+// ─────────────────────────────────────────────────────────────
+// MEDICAL RECORDS (Clinic/Vet write-only)
+// ─────────────────────────────────────────────────────────────
+
+model MedicalRecord {
+  id          String     @id @default(cuid())
+  petId       String
+  clinicId    String?
+  vetId       String?
+  type        RecordType
+  title       String
+  description String?    @db.Text
+  diagnosis   String?    @db.Text
+  treatment   String?    @db.Text
+  attachments String[]   // UploadThing URLs (X-rays, ultrasound, lab)
+  isPrivate   Boolean    @default(false)
+  visitDate   DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  pet    Pet     @relation(fields: [petId], references: [id], onDelete: Cascade)
+  clinic Clinic? @relation(fields: [clinicId], references: [id])
+  vet    Vet?    @relation(fields: [vetId], references: [id])
+
+  @@index([petId])
+  @@index([clinicId])
+  @@index([vetId])
+  @@index([visitDate])
+  @@map("medical_records")
+}
+
+// ─────────────────────────────────────────────────────────────
+// VACCINATION
+// ─────────────────────────────────────────────────────────────
+
+model Vaccination {
+  id              String   @id @default(cuid())
+  petId           String
+  vaccineName     String
+  manufacturer    String?
+  batchNumber     String?
+  administeredAt  DateTime
+  nextDueAt       DateTime?
+  vetName         String?
+  clinicName      String?
+  certificateUrl  String?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@index([nextDueAt])
+  @@map("vaccinations")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PRESCRIPTION
+// ─────────────────────────────────────────────────────────────
+
+model Prescription {
+  id           String   @id @default(cuid())
+  petId        String
+  issuedBy     String   // Vet name
+  clinicName   String?
+  issuedAt     DateTime @default(now())
+  validUntil   DateTime?
+  drugs        Json     // [{ name, dosage, frequency, duration, notes }]
+  instructions String?  @db.Text
+  refills      Int      @default(0)
+  isPdfReady   Boolean  @default(false)
+  pdfUrl       String?
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@map("prescriptions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// APPOINTMENT
+// ─────────────────────────────────────────────────────────────
+
+model Appointment {
+  id               String            @id @default(cuid())
+  petId            String
+  ownerId          String
+  clinicId         String
+  vetId            String?
+  type             ConsultationType  @default(IN_PERSON)
+  status           AppointmentStatus @default(PENDING)
+  scheduledAt      DateTime
+  durationMinutes  Int               @default(30)
+  chiefComplaint   String?
+  notes            String?           @db.Text
+  videoRoomUrl     String?           // WebRTC / LiveKit room URL
+  totalAmount      Float?
+  isPaid           Boolean           @default(false)
+  paymentMethod    String?
+  paymentRef       String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  pet    Pet    @relation(fields: [petId], references: [id])
+  owner  User   @relation("PatientAppointments", fields: [ownerId], references: [id])
+  clinic Clinic @relation(fields: [clinicId], references: [id])
+  vet    Vet?   @relation(fields: [vetId], references: [id])
+
+  @@index([clinicId])
+  @@index([ownerId])
+  @@index([petId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTOMATED REMINDERS
+// ─────────────────────────────────────────────────────────────
+
+model Reminder {
+  id           String       @id @default(cuid())
+  petId        String
+  type         ReminderType
+  title        String
+  dueAt        DateTime
+  repeatDays   Int?         // Repeat every N days (null = one-time)
+  channel      NotificationChannel[]
+  isSent       Boolean      @default(false)
+  sentAt       DateTime?
+  isActive     Boolean      @default(true)
+  inngestJobId String?      // Inngest event ID
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@index([dueAt])
+  @@index([isSent])
+  @@map("reminders")
+}
+
+// ─────────────────────────────────────────────────────────────
+// BLOOD DONOR NETWORK
+// ─────────────────────────────────────────────────────────────
+
+model BloodDonorProfile {
+  id              String      @id @default(cuid())
+  petId           String      @unique
+  bloodType       BloodType
+  status          DonorStatus @default(PENDING_REVIEW)
+  lastDonatedAt   DateTime?
+  canDonateAfter  DateTime?
+  weight          Float?      // Must meet minimum weight threshold
+  isVaccinated    Boolean     @default(false)
+  healthNotes     String?
+  ownerConsent    Boolean     @default(false)
+  latitude        Float?      // Owner location for matching
+  longitude       Float?
+  city            String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  pet           Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  donationAlerts DonationAlert[]
+
+  @@index([bloodType])
+  @@index([status])
+  @@map("blood_donor_profiles")
+}
+
+model BloodRequest {
+  id            String      @id @default(cuid())
+  clinicId      String
+  patientPetId  String?
+  bloodType     BloodType
+  species       Species
+  urgency       String      @default("urgent") // urgent | critical
+  description   String?
+  isActive      Boolean     @default(true)
+  expiresAt     DateTime
+  respondCount  Int         @default(0)
+  createdAt     DateTime    @default(now())
+
+  clinic        Clinic          @relation(fields: [clinicId], references: [id])
+  donationAlerts DonationAlert[]
+
+  @@index([clinicId])
+  @@index([bloodType])
+  @@index([species])
+  @@map("blood_requests")
+}
+
+model DonationAlert {
+  id             String   @id @default(cuid())
+  donorProfileId String
+  requestId      String
+  isSent         Boolean  @default(false)
+  isAccepted     Boolean?
+  sentAt         DateTime?
+  createdAt      DateTime @default(now())
+
+  donorProfile BloodDonorProfile @relation(fields: [donorProfileId], references: [id])
+  request      BloodRequest      @relation(fields: [requestId], references: [id])
+
+  @@index([donorProfileId])
+  @@index([requestId])
+  @@map("donation_alerts")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHARMACY / DRUG LIBRARY
+// ─────────────────────────────────────────────────────────────
+
+model Drug {
+  id               String    @id @default(cuid())
+  name             String
+  genericName      String?
+  brandNames       String[]
+  category         String
+  description      String?   @db.Text
+  dosageInfo       String?   @db.Text
+  sideEffects      String?   @db.Text
+  contraindications String?  @db.Text
+  applicableSpecies Species[]
+  requiresRx       Boolean   @default(true)
+  isOtc            Boolean   @default(false)
+  imageUrl         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  toxicAlerts ToxicSubstance[]
+
+  @@index([name])
+  @@map("drugs")
+}
+
+model ToxicSubstance {
+  id             String    @id @default(cuid())
+  name           String
+  aliases        String[]
+  drugId         String?
+  toxicFor       Species[]
+  severity       String    // mild | moderate | severe | lethal
+  symptoms       String[]
+  firstAidSteps  String[]
+  antidote       String?
+  references     String[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  drug Drug? @relation(fields: [drugId], references: [id])
+
+  @@index([name])
+  @@map("toxic_substances")
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  url       String?
+  channel   NotificationChannel @default(IN_APP)
+  isRead    Boolean             @default(false)
+  readAt    DateTime?
+  data      Json?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
