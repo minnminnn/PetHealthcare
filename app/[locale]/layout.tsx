@@ -2,7 +2,6 @@ import "@/styles/globals.css";
 import { type Metadata, type Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { Inter, Roboto_Mono } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/react";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/server/auth";
@@ -10,19 +9,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { SOSButton } from "@/components/layout/SOSButton";
 import { locales, type Locale } from "@/i18n";
-
-// ─── Fonts ────────────────────────────────────────────────────────────────────
-const geistSans = Inter({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-  display: "swap",
-});
-
-const geistMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-});
 
 // ─── Static params for next-intl ──────────────────────────────────────────────
 export function generateStaticParams() {
@@ -32,7 +18,7 @@ export function generateStaticParams() {
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: {
-    default: "PetCare — Nền Tảng Sức Khỏe Thú Cưng Toàn Diện",
+    default: "PetCare - Nền Tảng Sức Khỏe Thú Cưng Toàn Diện",
     template: "%s | PetCare Vietnam",
   },
   description:
@@ -53,8 +39,9 @@ export const metadata: Metadata = {
     type: "website",
     locale: "vi_VN",
     alternateLocale: "en_US",
-    title: "PetCare — Nền Tảng Sức Khỏe Thú Cưng Toàn Diện",
-    description: "Tra cứu phòng khám thú y, hồ sơ y tế kỹ thuật số, tư vấn 24/7",
+    title: "PetCare - Nền Tảng Sức Khỏe Thú Cưng Toàn Diện",
+    description:
+      "Tra cứu phòng khám thú y, hồ sơ y tế kỹ thuật số, tư vấn 24/7",
     siteName: "PetCare Vietnam",
   },
   twitter: {
@@ -79,7 +66,10 @@ interface RootLayoutProps {
   params: { locale: string };
 }
 
-export default async function RootLayout({ children, params: { locale } }: RootLayoutProps) {
+export default async function RootLayout({
+  children,
+  params: { locale },
+}: RootLayoutProps) {
   // Enable SSR for next-intl
   setRequestLocale(locale as Locale);
 
@@ -93,13 +83,15 @@ export default async function RootLayout({ children, params: { locale } }: RootL
   const session = await auth();
 
   return (
-    <html
-      lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang={locale} suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preload"
+          href="/fonts/inter-variable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link rel="dns-prefetch" href="https://utfs.io" />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
@@ -110,9 +102,7 @@ export default async function RootLayout({ children, params: { locale } }: RootL
               <Navbar locale={locale as Locale} />
 
               {/* ── Page Content ─────────────────────────────── */}
-              <main className="min-h-[calc(100vh-4rem)] pt-16">
-                {children}
-              </main>
+              <main className="min-h-[100dvh]">{children}</main>
 
               {/* ── Persistent SOS Emergency FAB ─────────────── */}
               <SOSButton />
@@ -122,10 +112,11 @@ export default async function RootLayout({ children, params: { locale } }: RootL
                 position="top-right"
                 toastOptions={{
                   style: {
-                    background: "white",
-                    border: "1px solid #E2E8F0",
+                    background: "#f3f3f0",
+                    color: "#20211f",
+                    border: "1px solid #d7d7d1",
                     borderRadius: "12px",
-                    fontFamily: "var(--font-geist-sans)",
+                    fontFamily: "InterVariable, sans-serif",
                   },
                 }}
               />

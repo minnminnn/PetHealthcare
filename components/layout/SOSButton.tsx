@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { AlertTriangle, Phone, Navigation, X, Loader2, Bot } from "lucide-react";
+import {
+  AlertTriangle,
+  Phone,
+  Navigation,
+  X,
+  Loader2,
+  Bot,
+} from "lucide-react";
 import { api } from "@/trpc/react";
 
 interface NearbyClinic {
@@ -21,7 +28,9 @@ interface NearbyClinic {
 export function SOSButton() {
   const t = useTranslations("sos");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
   const [geoError, setGeoError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [showTriageChat, setShowTriageChat] = useState(false);
@@ -30,7 +39,7 @@ export function SOSButton() {
   const { data: nearbyClinics, isLoading: clinicsLoading } =
     api.emergency.getNearestClinics.useQuery(
       { lat: coords?.lat ?? 0, lng: coords?.lng ?? 0 },
-      { enabled: !!coords }
+      { enabled: !!coords },
     );
 
   // Get user location when modal opens
@@ -56,36 +65,38 @@ export function SOSButton() {
         // Fallback to Hanoi center
         setCoords({ lat: 21.0285, lng: 105.8342 });
       },
-      { timeout: 8000, maximumAge: 60000 }
+      { timeout: 8000, maximumAge: 60000 },
     );
   };
 
   // Prevent body scroll when modal open
   useEffect(() => {
     document.body.style.overflow = isModalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isModalOpen]);
 
   return (
     <>
       {/* ── Floating SOS Button ─────────────────────────────────────────────── */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3">
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
         <motion.button
           onClick={handleSOSClick}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative flex items-center gap-2.5 bg-emergency text-white px-5 py-3.5 rounded-2xl font-bold text-sm shadow-emergency hover:shadow-xl transition-all duration-200 cursor-pointer select-none"
+          className="relative flex h-12 w-12 items-center justify-center gap-2.5 rounded-xl bg-emergency text-sm font-bold text-white shadow-emergency transition-all duration-200 hover:shadow-xl sm:w-auto sm:px-5"
           aria-label="SOS Emergency"
           id="sos-emergency-btn"
         >
           {/* Pulse rings */}
-          <span className="absolute inset-0 rounded-2xl bg-emergency animate-pulse-ring opacity-60" />
-          <span className="absolute inset-0 rounded-2xl bg-emergency animate-pulse-ring opacity-40 [animation-delay:0.4s]" />
+          <span className="absolute inset-0 rounded-xl bg-emergency animate-pulse-ring opacity-60" />
+          <span className="absolute inset-0 rounded-xl bg-emergency animate-pulse-ring opacity-40 [animation-delay:0.4s]" />
 
           {/* Icon + Label */}
           <div className="relative flex items-center gap-2.5">
             <AlertTriangle className="w-5 h-5 animate-pulse-dot" />
-            <span className="tracking-wide">SOS</span>
+            <span className="hidden tracking-wide sm:inline">SOS</span>
           </div>
         </motion.button>
       </div>
@@ -119,13 +130,15 @@ export function SOSButton() {
                       <AlertTriangle className="w-7 h-7 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-white font-bold text-xl leading-tight">{t("title")}</h2>
+                      <h2 className="text-white font-bold text-xl leading-tight">
+                        {t("title")}
+                      </h2>
                       <p className="text-red-100 text-sm mt-0.5">
                         {isLocating
-                          ? "📍 Đang định vị..."
+                          ? "Đang định vị..."
                           : coords
-                          ? "📍 Đã xác định vị trí"
-                          : t("subtitle")}
+                            ? "Đã xác định vị trí"
+                            : t("subtitle")}
                       </p>
                     </div>
                   </div>
@@ -147,7 +160,11 @@ export function SOSButton() {
                         : "bg-white/20 text-white hover:bg-white/30"
                     }`}
                   >
-                    🏥 Phòng khám
+                    <Navigation
+                      className="mr-1.5 inline h-4 w-4"
+                      aria-hidden="true"
+                    />
+                    Phòng khám
                   </button>
                   <button
                     onClick={() => setShowTriageChat(true)}
@@ -157,7 +174,8 @@ export function SOSButton() {
                         : "bg-white/20 text-white hover:bg-white/30"
                     }`}
                   >
-                    🤖 AI Sơ cứu
+                    <Bot className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+                    AI Sơ cứu
                   </button>
                 </div>
               </div>
@@ -177,7 +195,11 @@ export function SOSButton() {
                     {/* Geo error */}
                     {geoError && !clinicsLoading && (
                       <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
-                        ⚠️ {geoError}
+                        <AlertTriangle
+                          className="mr-1.5 inline h-4 w-4"
+                          aria-hidden="true"
+                        />
+                        {geoError}
                       </div>
                     )}
 
@@ -199,7 +221,9 @@ export function SOSButton() {
                               <h3 className="font-semibold text-slate-800 text-sm leading-tight">
                                 {clinic.name}
                               </h3>
-                              <p className="text-xs text-slate-500 mt-0.5">{clinic.address}</p>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {clinic.address}
+                              </p>
                             </div>
                           </div>
                           <div className="bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-bold flex-shrink-0">
@@ -231,7 +255,10 @@ export function SOSButton() {
                     {nearbyClinics?.length === 0 && !clinicsLoading && (
                       <div className="text-center py-10 text-slate-500 text-sm">
                         <p>Không tìm thấy phòng khám 24/7 trong khu vực.</p>
-                        <p className="mt-1">Hãy gọi đường dây khẩn cấp thú y: <strong>1900 xxxx</strong></p>
+                        <p className="mt-1">
+                          Hãy gọi đường dây khẩn cấp thú y:{" "}
+                          <strong>1900 xxxx</strong>
+                        </p>
                       </div>
                     )}
                   </>
@@ -250,11 +277,13 @@ export function SOSButton() {
 // ─── AI Triage Panel ─────────────────────────────────────────────────────────
 
 function AITriagePanel() {
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([
+  const [messages, setMessages] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([
     {
       role: "assistant",
       content:
-        "🚨 Tôi là trợ lý sơ cứu khẩn cấp. Hãy mô tả tình trạng của thú cưng để tôi hướng dẫn bạn ngay.\n\n**Lưu ý:** Đây là hướng dẫn sơ cứu tạm thời. Hãy đến phòng khám thú y NGAY LẬP TỨC!",
+        "Tôi là trợ lý sơ cứu khẩn cấp. Hãy mô tả tình trạng của thú cưng để tôi hướng dẫn bạn ngay.\n\n**Lưu ý:** Đây là hướng dẫn sơ cứu tạm thời. Hãy đến phòng khám thú y NGAY LẬP TỨC!",
     },
   ]);
   const [input, setInput] = useState("");
@@ -289,7 +318,10 @@ function AITriagePanel() {
 
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: accumulated };
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: accumulated,
+          };
           return updated;
         });
       }
@@ -298,7 +330,8 @@ function AITriagePanel() {
         ...prev,
         {
           role: "assistant",
-          content: "❌ Lỗi kết nối. Vui lòng gọi trực tiếp đến phòng khám khẩn cấp.",
+          content:
+            "❌ Lỗi kết nối. Vui lòng gọi trực tiếp đến phòng khám khẩn cấp.",
         },
       ]);
     } finally {
@@ -325,9 +358,11 @@ function AITriagePanel() {
                 <Bot className="w-3.5 h-3.5 inline mr-1.5 text-primary-600 -mt-0.5" />
               )}
               {msg.content}
-              {isStreaming && idx === messages.length - 1 && msg.role === "assistant" && (
-                <span className="inline-block w-1.5 h-4 bg-primary-400 ml-1 animate-pulse rounded-sm" />
-              )}
+              {isStreaming &&
+                idx === messages.length - 1 &&
+                msg.role === "assistant" && (
+                  <span className="inline-block w-1.5 h-4 bg-primary-400 ml-1 animate-pulse rounded-sm" />
+                )}
             </div>
           </div>
         ))}
