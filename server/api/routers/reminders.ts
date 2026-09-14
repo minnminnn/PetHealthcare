@@ -11,13 +11,17 @@ export const remindersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.reminder.findMany({
         where: {
-          ...(input.petId ? { petId: input.petId } : {
-            pet: { ownerId: ctx.session.user.id },
-          }),
+          ...(input.petId
+            ? { petId: input.petId }
+            : {
+                pet: { ownerId: ctx.session.user.id },
+              }),
           isActive: true,
         },
         include: {
-          pet: { select: { id: true, name: true, species: true, avatarUrl: true } },
+          pet: {
+            select: { id: true, name: true, species: true, avatarUrl: true },
+          },
         },
         orderBy: { dueAt: "asc" },
       });
@@ -25,14 +29,18 @@ export const remindersRouter = createTRPCRouter({
 
   /** Create a reminder and schedule Inngest job */
   create: protectedProcedure
-    .input(z.object({
-      petId: z.string(),
-      type: z.nativeEnum(ReminderType),
-      title: z.string().min(1).max(200),
-      dueAt: z.date(),
-      repeatDays: z.number().optional(),
-      channel: z.array(z.nativeEnum(NotificationChannel)).default(["PUSH", "EMAIL"]),
-    }))
+    .input(
+      z.object({
+        petId: z.string(),
+        type: z.nativeEnum(ReminderType),
+        title: z.string().min(1).max(200),
+        dueAt: z.date(),
+        repeatDays: z.number().optional(),
+        channel: z
+          .array(z.nativeEnum(NotificationChannel))
+          .default(["PUSH", "EMAIL"]),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       // Verify pet ownership
       const pet = await ctx.db.pet.findUnique({ where: { id: input.petId } });
@@ -56,7 +64,7 @@ export const remindersRouter = createTRPCRouter({
           channel: input.channel,
           repeatDays: input.repeatDays,
         },
-        ts: input.dueAt,
+        ts: input.dueAt.getTime(),
       });
 
       return reminder;

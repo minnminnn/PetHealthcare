@@ -18,18 +18,27 @@ export const sendReminder = inngest.createFunction(
   },
   { event: "reminder/schedule" },
   async ({ event, step, logger }) => {
-    const { reminderId, petId, petName, ownerId, dueAt, type, title, channel, repeatDays } =
-      event.data as {
-        reminderId: string;
-        petId: string;
-        petName: string;
-        ownerId: string;
-        dueAt: string;
-        type: string;
-        title: string;
-        channel: string[];
-        repeatDays?: number;
-      };
+    const {
+      reminderId,
+      petId,
+      petName,
+      ownerId,
+      dueAt,
+      type,
+      title,
+      channel,
+      repeatDays,
+    } = event.data as {
+      reminderId: string;
+      petId: string;
+      petName: string;
+      ownerId: string;
+      dueAt: string;
+      type: string;
+      title: string;
+      channel: string[];
+      repeatDays?: number;
+    };
 
     logger.info(`Processing reminder ${reminderId} for ${petName}`);
 
@@ -37,12 +46,20 @@ export const sendReminder = inngest.createFunction(
     const reminder = await step.run("check-reminder", async () => {
       return db.reminder.findUnique({
         where: { id: reminderId },
-        include: { pet: { include: { owner: { select: { email: true, name: true, pushToken: true } } } } },
+        include: {
+          pet: {
+            include: {
+              owner: { select: { email: true, name: true, pushToken: true } },
+            },
+          },
+        },
       });
     });
 
     if (!reminder?.isActive || reminder.isSent) {
-      logger.info(`Reminder ${reminderId} is inactive or already sent — skipping`);
+      logger.info(
+        `Reminder ${reminderId} is inactive or already sent — skipping`,
+      );
       return { skipped: true };
     }
 
@@ -153,10 +170,13 @@ export const sendReminder = inngest.createFunction(
             channel,
             repeatDays,
           },
-          ts: nextDue,
+          ts: nextDue.getTime(),
         });
 
-        return { nextReminderId: nextReminder.id, nextDue: nextDue.toISOString() };
+        return {
+          nextReminderId: nextReminder.id,
+          nextDue: nextDue.toISOString(),
+        };
       });
     }
 

@@ -2,29 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "InterVariable";
+  src: url("/fonts/inter-variable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 /* ─── CSS Custom Properties (shadcn/ui compatible) ───────────────────────── */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 199 89% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 174 73% 32%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 174 100% 92%;
-    --accent-foreground: 174 73% 20%;
+    --background: 60 11% 95%;
+    --foreground: 90 3% 13%;
+    --card: 60 9% 92%;
+    --card-foreground: 90 3% 13%;
+    --popover: 60 11% 95%;
+    --popover-foreground: 90 3% 13%;
+    --primary: 5 49% 48%;
+    --primary-foreground: 60 24% 96%;
+    --secondary: 90 3% 29%;
+    --secondary-foreground: 60 24% 96%;
+    --muted: 60 8% 90%;
+    --muted-foreground: 90 3% 40%;
+    --accent: 8 62% 91%;
+    --accent-foreground: 5 54% 28%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 199 89% 39%;
+    --border: 60 5% 82%;
+    --input: 60 5% 82%;
+    --ring: 5 49% 48%;
     --radius: 0.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 90 4% 9%;
+      --foreground: 60 12% 93%;
+      --card: 90 3% 14%;
+      --card-foreground: 60 12% 93%;
+      --popover: 90 3% 14%;
+      --popover-foreground: 60 12% 93%;
+      --muted: 90 3% 18%;
+      --muted-foreground: 60 4% 70%;
+      --border: 60 3% 24%;
+      --input: 60 3% 24%;
+    }
   }
 }
 
@@ -41,11 +64,16 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-optical-sizing: auto;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   /* Vietnamese text optimization */
-  p, li, span {
+  p,
+  li,
+  span {
     font-variant-numeric: tabular-nums;
   }
 
@@ -60,24 +88,36 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-slate-100 rounded-full;
+    @apply rounded-full bg-secondary-100;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full;
+    @apply rounded-full bg-secondary-300;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400;
+    @apply bg-secondary-400;
   }
 }
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
 @layer base {
-  h1 { @apply text-4xl font-bold tracking-tight text-slate-900; }
-  h2 { @apply text-3xl font-bold tracking-tight text-slate-800; }
-  h3 { @apply text-2xl font-semibold text-slate-800; }
-  h4 { @apply text-xl font-semibold text-slate-700; }
-  h5 { @apply text-lg font-semibold text-slate-700; }
-  h6 { @apply text-base font-semibold text-slate-600; }
+  h1 {
+    @apply text-4xl font-bold tracking-tight text-slate-900;
+  }
+  h2 {
+    @apply text-3xl font-bold tracking-tight text-slate-800;
+  }
+  h3 {
+    @apply text-2xl font-semibold text-slate-800;
+  }
+  h4 {
+    @apply text-xl font-semibold text-slate-700;
+  }
+  h5 {
+    @apply text-lg font-semibold text-slate-700;
+  }
+  h6 {
+    @apply text-base font-semibold text-slate-600;
+  }
 }
 
 /* ─── Component Utilities ────────────────────────────────────────────────── */
@@ -178,12 +218,7 @@
 
   /* Shimmer loading */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      #f1f5f9 25%,
-      #e2e8f0 50%,
-      #f1f5f9 75%
-    );
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
     background-size: 200% 100%;
     @apply animate-shimmer;
   }
@@ -206,7 +241,30 @@
 /* ─── Map Overrides (Leaflet) ────────────────────────────────────────────── */
 .leaflet-container {
   @apply rounded-2xl border border-slate-200;
-  font-family: var(--font-geist-sans) !important;
+  font-family: "InterVariable", sans-serif !important;
+}
+
+@keyframes home-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-marquee {
+    animation: home-marquee 30s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .leaflet-popup-content-wrapper {
@@ -219,14 +277,24 @@
 
 /* ─── Mobile Optimizations ───────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  h1 { @apply text-3xl; }
-  h2 { @apply text-2xl; }
-  .section-container { @apply py-10; }
+  h1 {
+    @apply text-3xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  .section-container {
+    @apply py-10;
+  }
 }
 
 /* ─── Print Styles (for Pet Passport PDF) ───────────────────────────────── */
 @media print {
-  nav, .sos-btn, footer { display: none !important; }
+  nav,
+  .sos-btn,
+  footer {
+    display: none !important;
+  }
   .passport-print {
     @apply shadow-none border-none;
   }
