@@ -236,15 +236,6 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="max-w-4xl text-balance text-4xl font-medium leading-[1.02] tracking-[-0.045em] text-[#20211f] dark:text-[#f1f1ed] sm:text-6xl lg:text-7xl">
             {copy.interestTitle}
-            <span className="mx-2 inline-block h-[.72em] w-[1.35em] overflow-hidden rounded-full align-baseline sm:mx-3">
-              <Image
-                src="/images/petcare-passport.webp"
-                alt=""
-                width={180}
-                height={96}
-                className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </span>
           </h2>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#676964] dark:text-[#b7b8b2]">
             {copy.interestDescription}

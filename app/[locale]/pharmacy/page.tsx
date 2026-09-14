@@ -98,7 +98,7 @@ export default function PharmacyPage({ params: { locale } }: PageProps) {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-teal-700 via-secondary-600 to-primary-600 pt-8 pb-16">
+      <div className="bg-gradient-to-br from-teal-700 via-secondary-600 to-primary-600 py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           <div className="flex items-center gap-2 text-teal-200 text-sm mb-4">
@@ -156,7 +156,7 @@ export default function PharmacyPage({ params: { locale } }: PageProps) {
         </div>
 
         {/* Category tabs + Filter */}
-        <div className="bg-white rounded-2xl shadow-card border border-slate-200/80 p-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-none border border-slate-200/80 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <div className="flex items-center gap-2 flex-wrap">
               {CATEGORIES.map(({ id, label, icon: Icon }) => (
@@ -195,7 +195,7 @@ export default function PharmacyPage({ params: { locale } }: PageProps) {
           {SAMPLE_DRUGS.map((drug) => (
             <div
               key={drug.id}
-              className={`card-base p-5 border-l-4 ${
+              className={`card-base p-5 border-l-4 shadow-none hover:shadow-none ${
                 drug.safe === false
                   ? "border-l-red-500 bg-red-50/30"
                   : drug.safe === null

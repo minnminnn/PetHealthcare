@@ -87,7 +87,7 @@ export default function EmergencyPage({ params: { locale } }: PageProps) {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Emergency Hero ────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-red-700 via-red-600 to-orange-500 pt-8 pb-16">
+      <div className="bg-gradient-to-br from-red-700 via-red-600 to-orange-500 py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}

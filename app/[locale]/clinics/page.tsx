@@ -86,7 +86,7 @@ export default function ClinicsPage({ params: { locale } }: PageProps) {
     <div className="min-h-screen bg-slate-50">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600 pt-8 pb-16">
+      <div className="bg-gradient-to-br from-primary-700 via-primary-600 to-secondary-600 py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}
@@ -209,10 +209,10 @@ export default function ClinicsPage({ params: { locale } }: PageProps) {
           {SAMPLE_CLINICS.map((clinic) => {
             const status = STATUS_CONFIG[clinic.status as keyof typeof STATUS_CONFIG];
             return (
-              <div key={clinic.id} className="card-base p-5 group">
+              <div key={clinic.id} className="card-base p-5 group shadow-none hover:shadow-none">
                 <div className="flex gap-4">
                   {/* Avatar */}
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-3xl">
                     {clinic.image}
                   </div>
 
@@ -290,7 +290,7 @@ export default function ClinicsPage({ params: { locale } }: PageProps) {
         </div>
 
         {/* Map placeholder */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden mb-10">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-none overflow-hidden mb-10">
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <h2 className="font-bold text-slate-800 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-primary-600" />
