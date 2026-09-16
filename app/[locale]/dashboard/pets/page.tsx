@@ -29,7 +29,7 @@ export default async function PetsPassportIndexPage({ params }: PageProps) {
 
   const t = await getTranslations("petPassport");
   return (
-    <main className="passport-shell flex min-h-[80vh] items-center justify-center bg-[#efefeb] px-4 pt-20">
+    <main className="passport-shell flex min-h-[100vh] items-center justify-center bg-[#efefeb] px-4 pt-20">
       <div className="max-w-lg rounded-[28px] border border-black/10 bg-[#f8f8f5] p-8 text-center sm:p-10">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary-900 text-white">
           <PawPrint className="h-6 w-6" aria-hidden="true" />

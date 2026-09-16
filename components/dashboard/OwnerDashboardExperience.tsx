@@ -134,7 +134,7 @@ export function OwnerDashboardExperience({
           className="grid items-end gap-8 lg:grid-cols-[minmax(0,1fr)_auto]"
         >
           <div className="max-w-3xl">
-            <div className="mb-5 flex items-center gap-3">
+            {/* <div className="mb-5 flex items-center gap-3">
               <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#d85f53] text-[#1a1b19]">
                 {user.image ? (
                   <img
@@ -149,7 +149,7 @@ export function OwnerDashboardExperience({
               <p className="text-sm font-semibold text-[#676964] dark:text-[#b7b8b2]">
                 {t("accountLabel")}
               </p>
-            </div>
+            </div> */}
             <h1 className="max-w-3xl text-[clamp(2.4rem,6vw,5rem)] font-semibold leading-[0.96] tracking-[-0.065em] text-[#20211f] dark:text-[#f1f1ed]">
               {t("greeting", { name: firstName })}
             </h1>
