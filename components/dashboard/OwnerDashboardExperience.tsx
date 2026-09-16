@@ -158,19 +158,13 @@ export function OwnerDashboardExperience({
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-            <Link
-              href="/clinics"
-              className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#b9473e] px-5 text-sm font-semibold text-[#f7f7f2] transition hover:-translate-y-0.5 hover:bg-[#953831] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] focus-visible:ring-offset-2 dark:bg-[#ef7569] dark:text-[#1a1b19] dark:hover:bg-[#f18a80]"
-            >
-              {t("findClinic")}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+          <div>
             <Link
               href="/dashboard/pets"
-              className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-black/15 px-5 text-sm font-semibold text-[#30312e] transition hover:-translate-y-0.5 hover:border-[#b9473e] hover:text-[#953831] active:translate-y-px dark:border-white/15 dark:text-[#f1f1ed] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
+              className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#b9473e] px-5 text-sm font-semibold text-[#f7f7f2] transition hover:-translate-y-0.5 hover:bg-[#953831] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] focus-visible:ring-offset-2 dark:bg-[#ef7569] dark:text-[#1a1b19] dark:hover:bg-[#f18a80]"
             >
               {t("openPassport")}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
         </header>
@@ -532,13 +526,6 @@ export function OwnerDashboardExperience({
               <p className="mt-2 text-sm leading-6 opacity-85">
                 {t("careNote.body")}
               </p>
-              <Link
-                href="/dashboard/pets"
-                className="mt-5 inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold underline decoration-current/35 underline-offset-4 hover:decoration-current"
-              >
-                {t("careNote.action")}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
             </section>
           </aside>
         </div>
