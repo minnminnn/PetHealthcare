@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure, clinicProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  clinicProcedure,
+} from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { ClinicStatus, Species } from "@prisma/client";
 
@@ -16,18 +20,24 @@ export const clinicsRouter = createTRPCRouter({
         species: z.nativeEnum(Species).optional(),
         status: z.nativeEnum(ClinicStatus).optional(),
         isVerified: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { page, limit, ...filters } = input;
       const skip = (page - 1) * limit;
 
       const where = {
-        ...(filters.city && { city: { contains: filters.city, mode: "insensitive" as const } }),
+        ...(filters.city && {
+          city: { contains: filters.city, mode: "insensitive" as const },
+        }),
         ...(filters.is24h !== undefined && { is24h: filters.is24h }),
-        ...(filters.isExoticSpec !== undefined && { isExoticSpec: filters.isExoticSpec }),
+        ...(filters.isExoticSpec !== undefined && {
+          isExoticSpec: filters.isExoticSpec,
+        }),
         ...(filters.status && { status: filters.status }),
-        ...(filters.isVerified !== undefined && { isVerified: filters.isVerified }),
+        ...(filters.isVerified !== undefined && {
+          isVerified: filters.isVerified,
+        }),
         ...(filters.species && {
           specializations: { has: filters.species },
         }),
@@ -85,7 +95,7 @@ export const clinicsRouter = createTRPCRouter({
       return clinic;
     }),
 
-  /** Find clinics within radius using PostGIS ST_DWithin */
+  /** Find clinics within radius using latitude/longitude distance. */
   getNearby: publicProcedure
     .input(
       z.object({
@@ -93,13 +103,12 @@ export const clinicsRouter = createTRPCRouter({
         lng: z.number(),
         radiusKm: z.number().default(10),
         is24h: z.boolean().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { lat, lng, radiusKm, is24h } = input;
       const radiusMeters = radiusKm * 1000;
 
-      // Use PostGIS ST_DWithin for spatial query + ST_Distance for ordering
       const clinics = await ctx.db.$queryRawUnsafe<
         Array<{
           id: string;
@@ -119,23 +128,23 @@ export const clinicsRouter = createTRPCRouter({
         }>
       >(
         `
-        SELECT
-          id, name, slug, address, phone, status, is_24h AS "is24h",
-          is_verified AS "isVerified", is_exotic_spec AS "isExoticSpec",
-          rating, latitude, longitude, logo_url AS "logoUrl",
-          ST_Distance(
-            location::geography,
-            ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography
-          ) AS distance_m
-        FROM clinics
-        WHERE
-          location IS NOT NULL
-          AND ST_DWithin(
-            location::geography,
-            ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography,
-            $3
-          )
-          ${is24h ? "AND is_24h = true" : ""}
+        SELECT *
+        FROM (
+          SELECT
+            id, name, slug, address, phone, status, is_24h AS "is24h",
+            is_verified AS "isVerified", is_exotic_spec AS "isExoticSpec",
+            rating, latitude, longitude, logo_url AS "logoUrl",
+            6371000 * 2 * ASIN(SQRT(LEAST(1,
+              POWER(SIN(RADIANS(latitude - $1) / 2), 2) +
+              COS(RADIANS($1)) * COS(RADIANS(latitude)) *
+              POWER(SIN(RADIANS(longitude - $2) / 2), 2)
+            ))) AS distance_m
+          FROM clinics
+          WHERE latitude IS NOT NULL
+            AND longitude IS NOT NULL
+            ${is24h ? "AND is_24h = true" : ""}
+        ) AS clinics_with_distance
+        WHERE distance_m <= $3
         ORDER BY distance_m ASC
         LIMIT 20
         `,
@@ -156,10 +165,12 @@ export const clinicsRouter = createTRPCRouter({
       z.object({
         clinicId: z.string(),
         status: z.nativeEnum(ClinicStatus),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-      const clinic = await ctx.db.clinic.findUnique({ where: { id: input.clinicId } });
+      const clinic = await ctx.db.clinic.findUnique({
+        where: { id: input.clinicId },
+      });
       if (!clinic) throw new TRPCError({ code: "NOT_FOUND" });
       if (clinic.adminUserId !== ctx.session.user.id) {
         throw new TRPCError({ code: "FORBIDDEN" });

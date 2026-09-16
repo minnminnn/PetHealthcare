@@ -1,6 +1,6 @@
 // ============================================================
 // PetHealthcare Platform — Production Prisma Schema
-// PostgreSQL + PostGIS (geospatial) + pg_trgm (fuzzy search)
+// PostgreSQL + pg_trgm (fuzzy search)
 // ============================================================
 
 generator client {
@@ -11,7 +11,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [postgis(version: "3.3.2"), pg_trgm, unaccent, uuid_ossp(map: "uuid-ossp")]
+  extensions = [pg_trgm, unaccent, uuid_ossp(map: "uuid-ossp")]
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -39,10 +39,10 @@ enum Species {
 }
 
 enum ClinicStatus {
-  AVAILABLE    // Đang hoạt động bình thường
-  BUSY         // Đang đông khách
-  EMERGENCY    // Trực cấp cứu 24/7
-  CLOSED       // Đóng cửa
+  AVAILABLE // Đang hoạt động bình thường
+  BUSY // Đang đông khách
+  EMERGENCY // Trực cấp cứu 24/7
+  CLOSED // Đóng cửa
 }
 
 enum BloodType {
@@ -132,7 +132,7 @@ model User {
   role          Role      @default(OWNER)
   isActive      Boolean   @default(true)
   locale        String    @default("vi")
-  pushToken     String?   // Web Push subscription JSON
+  pushToken     String? // Web Push subscription JSON
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -140,10 +140,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
   pets          Pet[]
-  clinic        Clinic?         @relation("ClinicAdmin")
+  clinic        Clinic?        @relation("ClinicAdmin")
   vetProfile    Vet?
   notifications Notification[]
-  appointments  Appointment[]   @relation("PatientAppointments")
+  appointments  Appointment[]  @relation("PatientAppointments")
 
   @@index([email])
   @@index([phone])
@@ -221,8 +221,8 @@ model Vet {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clinic         Clinic?        @relation(fields: [clinicId], references: [id])
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clinic         Clinic?         @relation(fields: [clinicId], references: [id])
   medicalRecords MedicalRecord[]
   appointments   Appointment[]
 
@@ -235,15 +235,15 @@ model Vet {
 // ─────────────────────────────────────────────────────────────
 
 model Clinic {
-  id              String      @id @default(cuid())
-  adminUserId     String      @unique
+  id              String       @id @default(cuid())
+  adminUserId     String       @unique
   name            String
-  nameUnaccented  String      // For pg_trgm fuzzy search
-  slug            String      @unique
-  description     String?     @db.Text
+  nameUnaccented  String // For pg_trgm fuzzy search
+  slug            String       @unique
+  description     String?      @db.Text
   address         String
   district        String?
-  city            String      @default("Hà Nội")
+  city            String       @default("Hà Nội")
   phone           String
   email           String?
   website         String?
@@ -251,25 +251,23 @@ model Clinic {
   coverImageUrl   String?
   imageUrls       String[]
   status          ClinicStatus @default(AVAILABLE)
-  isVerified      Boolean     @default(false)
-  is24h           Boolean     @default(false)
-  isExoticSpec    Boolean     @default(false)
+  isVerified      Boolean      @default(false)
+  is24h           Boolean      @default(false)
+  isExoticSpec    Boolean      @default(false)
   specializations Species[]
-  openingHours    Json?       // { mon: { open: "08:00", close: "18:00" }, ... }
-  rating          Float       @default(0)
-  reviewCount     Int         @default(0)
-  // PostGIS spatial point — longitude/latitude
-  // Stored as Unsupported to work with raw PostGIS queries
-  location        Unsupported("geometry(Point, 4326)")?
+  openingHours    Json? // { mon: { open: "08:00", close: "18:00" }, ... }
+  rating          Float        @default(0)
+  reviewCount     Int          @default(0)
+  // Coordinates used by portable Haversine distance queries.
   latitude        Float?
   longitude       Float?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  admin        User          @relation("ClinicAdmin", fields: [adminUserId], references: [id])
-  vets         Vet[]
-  appointments Appointment[]
-  petRecords   MedicalRecord[]
+  admin         User            @relation("ClinicAdmin", fields: [adminUserId], references: [id])
+  vets          Vet[]
+  appointments  Appointment[]
+  petRecords    MedicalRecord[]
   bloodRequests BloodRequest[]
 
   @@index([city])
@@ -292,19 +290,19 @@ model Pet {
   breed          String?
   color          String?
   dateOfBirth    DateTime?
-  gender         String?   // male | female | unknown
+  gender         String? // male | female | unknown
   isNeutered     Boolean   @default(false)
   microchipId    String?   @unique
   passportNumber String    @unique @default(cuid())
   avatarUrl      String?
   bloodType      BloodType @default(UNKNOWN)
-  weight         Float?    // Current weight in kg
+  weight         Float? // Current weight in kg
   notes          String?   @db.Text
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  owner          User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner          User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   weightHistory  WeightRecord[]
   medicalRecords MedicalRecord[]
   vaccinations   Vaccination[]
@@ -320,12 +318,12 @@ model Pet {
 }
 
 model WeightRecord {
-  id        String   @id @default(cuid())
-  petId     String
-  weight    Float    // kg
+  id         String   @id @default(cuid())
+  petId      String
+  weight     Float // kg
   recordedAt DateTime @default(now())
   recordedBy String? // Vet or owner name
-  notes     String?
+  notes      String?
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
@@ -347,7 +345,7 @@ model MedicalRecord {
   description String?    @db.Text
   diagnosis   String?    @db.Text
   treatment   String?    @db.Text
-  attachments String[]   // UploadThing URLs (X-rays, ultrasound, lab)
+  attachments String[] // UploadThing URLs (X-rays, ultrasound, lab)
   isPrivate   Boolean    @default(false)
   visitDate   DateTime   @default(now())
   createdAt   DateTime   @default(now())
@@ -369,18 +367,18 @@ model MedicalRecord {
 // ─────────────────────────────────────────────────────────────
 
 model Vaccination {
-  id              String   @id @default(cuid())
-  petId           String
-  vaccineName     String
-  manufacturer    String?
-  batchNumber     String?
-  administeredAt  DateTime
-  nextDueAt       DateTime?
-  vetName         String?
-  clinicName      String?
-  certificateUrl  String?
-  notes           String?
-  createdAt       DateTime @default(now())
+  id             String    @id @default(cuid())
+  petId          String
+  vaccineName    String
+  manufacturer   String?
+  batchNumber    String?
+  administeredAt DateTime
+  nextDueAt      DateTime?
+  vetName        String?
+  clinicName     String?
+  certificateUrl String?
+  notes          String?
+  createdAt      DateTime  @default(now())
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
@@ -394,16 +392,16 @@ model Vaccination {
 // ─────────────────────────────────────────────────────────────
 
 model Prescription {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   petId        String
-  issuedBy     String   // Vet name
+  issuedBy     String // Vet name
   clinicName   String?
-  issuedAt     DateTime @default(now())
+  issuedAt     DateTime  @default(now())
   validUntil   DateTime?
-  drugs        Json     // [{ name, dosage, frequency, duration, notes }]
-  instructions String?  @db.Text
-  refills      Int      @default(0)
-  isPdfReady   Boolean  @default(false)
+  drugs        Json // [{ name, dosage, frequency, duration, notes }]
+  instructions String?   @db.Text
+  refills      Int       @default(0)
+  isPdfReady   Boolean   @default(false)
   pdfUrl       String?
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
@@ -417,24 +415,24 @@ model Prescription {
 // ─────────────────────────────────────────────────────────────
 
 model Appointment {
-  id               String            @id @default(cuid())
-  petId            String
-  ownerId          String
-  clinicId         String
-  vetId            String?
-  type             ConsultationType  @default(IN_PERSON)
-  status           AppointmentStatus @default(PENDING)
-  scheduledAt      DateTime
-  durationMinutes  Int               @default(30)
-  chiefComplaint   String?
-  notes            String?           @db.Text
-  videoRoomUrl     String?           // WebRTC / LiveKit room URL
-  totalAmount      Float?
-  isPaid           Boolean           @default(false)
-  paymentMethod    String?
-  paymentRef       String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id              String            @id @default(cuid())
+  petId           String
+  ownerId         String
+  clinicId        String
+  vetId           String?
+  type            ConsultationType  @default(IN_PERSON)
+  status          AppointmentStatus @default(PENDING)
+  scheduledAt     DateTime
+  durationMinutes Int               @default(30)
+  chiefComplaint  String?
+  notes           String?           @db.Text
+  videoRoomUrl    String? // WebRTC / LiveKit room URL
+  totalAmount     Float?
+  isPaid          Boolean           @default(false)
+  paymentMethod   String?
+  paymentRef      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   pet    Pet    @relation(fields: [petId], references: [id])
   owner  User   @relation("PatientAppointments", fields: [ownerId], references: [id])
@@ -454,19 +452,19 @@ model Appointment {
 // ─────────────────────────────────────────────────────────────
 
 model Reminder {
-  id           String       @id @default(cuid())
+  id           String                @id @default(cuid())
   petId        String
   type         ReminderType
   title        String
   dueAt        DateTime
-  repeatDays   Int?         // Repeat every N days (null = one-time)
+  repeatDays   Int? // Repeat every N days (null = one-time)
   channel      NotificationChannel[]
-  isSent       Boolean      @default(false)
+  isSent       Boolean               @default(false)
   sentAt       DateTime?
-  isActive     Boolean      @default(true)
-  inngestJobId String?      // Inngest event ID
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  isActive     Boolean               @default(true)
+  inngestJobId String? // Inngest event ID
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
 
   pet Pet @relation(fields: [petId], references: [id], onDelete: Cascade)
 
@@ -481,23 +479,23 @@ model Reminder {
 // ─────────────────────────────────────────────────────────────
 
 model BloodDonorProfile {
-  id              String      @id @default(cuid())
-  petId           String      @unique
-  bloodType       BloodType
-  status          DonorStatus @default(PENDING_REVIEW)
-  lastDonatedAt   DateTime?
-  canDonateAfter  DateTime?
-  weight          Float?      // Must meet minimum weight threshold
-  isVaccinated    Boolean     @default(false)
-  healthNotes     String?
-  ownerConsent    Boolean     @default(false)
-  latitude        Float?      // Owner location for matching
-  longitude       Float?
-  city            String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  petId          String      @unique
+  bloodType      BloodType
+  status         DonorStatus @default(PENDING_REVIEW)
+  lastDonatedAt  DateTime?
+  canDonateAfter DateTime?
+  weight         Float? // Must meet minimum weight threshold
+  isVaccinated   Boolean     @default(false)
+  healthNotes    String?
+  ownerConsent   Boolean     @default(false)
+  latitude       Float? // Owner location for matching
+  longitude      Float?
+  city           String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
-  pet           Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  pet            Pet             @relation(fields: [petId], references: [id], onDelete: Cascade)
   donationAlerts DonationAlert[]
 
   @@index([bloodType])
@@ -506,19 +504,19 @@ model BloodDonorProfile {
 }
 
 model BloodRequest {
-  id            String      @id @default(cuid())
-  clinicId      String
-  patientPetId  String?
-  bloodType     BloodType
-  species       Species
-  urgency       String      @default("urgent") // urgent | critical
-  description   String?
-  isActive      Boolean     @default(true)
-  expiresAt     DateTime
-  respondCount  Int         @default(0)
-  createdAt     DateTime    @default(now())
+  id           String    @id @default(cuid())
+  clinicId     String
+  patientPetId String?
+  bloodType    BloodType
+  species      Species
+  urgency      String    @default("urgent") // urgent | critical
+  description  String?
+  isActive     Boolean   @default(true)
+  expiresAt    DateTime
+  respondCount Int       @default(0)
+  createdAt    DateTime  @default(now())
 
-  clinic        Clinic          @relation(fields: [clinicId], references: [id])
+  clinic         Clinic          @relation(fields: [clinicId], references: [id])
   donationAlerts DonationAlert[]
 
   @@index([clinicId])
@@ -528,13 +526,13 @@ model BloodRequest {
 }
 
 model DonationAlert {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   donorProfileId String
   requestId      String
-  isSent         Boolean  @default(false)
+  isSent         Boolean   @default(false)
   isAccepted     Boolean?
   sentAt         DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime  @default(now())
 
   donorProfile BloodDonorProfile @relation(fields: [donorProfileId], references: [id])
   request      BloodRequest      @relation(fields: [requestId], references: [id])
@@ -549,21 +547,21 @@ model DonationAlert {
 // ─────────────────────────────────────────────────────────────
 
 model Drug {
-  id               String    @id @default(cuid())
-  name             String
-  genericName      String?
-  brandNames       String[]
-  category         String
-  description      String?   @db.Text
-  dosageInfo       String?   @db.Text
-  sideEffects      String?   @db.Text
-  contraindications String?  @db.Text
+  id                String    @id @default(cuid())
+  name              String
+  genericName       String?
+  brandNames        String[]
+  category          String
+  description       String?   @db.Text
+  dosageInfo        String?   @db.Text
+  sideEffects       String?   @db.Text
+  contraindications String?   @db.Text
   applicableSpecies Species[]
-  requiresRx       Boolean   @default(true)
-  isOtc            Boolean   @default(false)
-  imageUrl         String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  requiresRx        Boolean   @default(true)
+  isOtc             Boolean   @default(false)
+  imageUrl          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   toxicAlerts ToxicSubstance[]
 
@@ -572,18 +570,18 @@ model Drug {
 }
 
 model ToxicSubstance {
-  id             String    @id @default(cuid())
-  name           String
-  aliases        String[]
-  drugId         String?
-  toxicFor       Species[]
-  severity       String    // mild | moderate | severe | lethal
-  symptoms       String[]
-  firstAidSteps  String[]
-  antidote       String?
-  references     String[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  aliases       String[]
+  drugId        String?
+  toxicFor      Species[]
+  severity      String // mild | moderate | severe | lethal
+  symptoms      String[]
+  firstAidSteps String[]
+  antidote      String?
+  references    String[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   drug Drug? @relation(fields: [drugId], references: [id])
 

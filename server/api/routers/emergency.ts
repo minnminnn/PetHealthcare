@@ -4,7 +4,7 @@ import { ClinicStatus } from "@prisma/client";
 
 export const emergencyRouter = createTRPCRouter({
   /**
-   * Get 3 nearest 24/7 emergency clinics using PostGIS ST_DWithin.
+   * Get 3 nearest 24/7 emergency clinics using latitude/longitude distance.
    * Called when user triggers SOS button.
    */
   getNearestClinics: publicProcedure
@@ -13,7 +13,7 @@ export const emergencyRouter = createTRPCRouter({
         lat: z.number(),
         lng: z.number(),
         radiusKm: z.number().default(50), // Widen radius for emergency
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { lat, lng, radiusKm } = input;
@@ -33,23 +33,23 @@ export const emergencyRouter = createTRPCRouter({
         }>
       >(
         `
-        SELECT
-          id, name, address, phone, status,
-          latitude, longitude, logo_url AS "logoUrl",
-          ST_Distance(
-            location::geography,
-            ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography
-          ) AS distance_m
-        FROM clinics
-        WHERE
-          location IS NOT NULL
-          AND is_24h = true
-          AND status IN ('EMERGENCY', 'AVAILABLE')
-          AND ST_DWithin(
-            location::geography,
-            ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography,
-            $3
-          )
+        SELECT *
+        FROM (
+          SELECT
+            id, name, address, phone, status,
+            latitude, longitude, logo_url AS "logoUrl",
+            6371000 * 2 * ASIN(SQRT(LEAST(1,
+              POWER(SIN(RADIANS(latitude - $1) / 2), 2) +
+              COS(RADIANS($1)) * COS(RADIANS(latitude)) *
+              POWER(SIN(RADIANS(longitude - $2) / 2), 2)
+            ))) AS distance_m
+          FROM clinics
+          WHERE latitude IS NOT NULL
+            AND longitude IS NOT NULL
+            AND is_24h = true
+            AND status IN ('EMERGENCY', 'AVAILABLE')
+        ) AS clinics_with_distance
+        WHERE distance_m <= $3
         ORDER BY distance_m ASC
         LIMIT 3
         `,

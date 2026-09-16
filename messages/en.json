@@ -186,5 +186,261 @@
     "thinking": "Analyzing...",
     "disclaimer": "This is emergency first aid guidance. Visit a veterinary clinic immediately.",
     "streamingNote": "Generating first aid instructions..."
+  },
+  "petPassport": {
+    "eyebrow": "Protected health record",
+    "title": "Digital pet passport",
+    "print": "Print",
+    "printDisclaimer": "Private health record generated from recorded PetCare data. This document is not a substitute for veterinary assessment.",
+    "secureShare": "Secure share",
+    "secureShareUnavailable": "Time-limited secure sharing is not configured yet",
+    "identityRecord": "Verified identity record",
+    "switchPet": "Switch pet",
+    "petPhotoAlt": "Portrait of {name}",
+    "passportNumber": "Passport",
+    "microchip": "Microchip",
+    "owner": "Owner",
+    "sex": "Sex",
+    "identityNote": "This private record is visible only to the owner and authorized care teams.",
+    "careSnapshot": "Care snapshot",
+    "snapshotTitle": "What matters for {name}, now",
+    "snapshotBody": "A factual summary based on recorded dates and clinical entries. Missing information is shown as unknown, never assumed healthy.",
+    "vaccinations": "Vaccinations",
+    "medication": "Medication",
+    "lastVisit": "Last vet visit",
+    "nextAppointment": "Next appointment",
+    "currentWeight": "Current weight",
+    "bloodType": "Blood type",
+    "activeCount": "{count, plural, =0 {None active} one {# active} other {# active}}",
+    "noneScheduled": "None scheduled",
+    "criticalInfo": "Important medical information",
+    "criticalInfoEmpty": "No structured allergy or chronic-condition information is recorded. General notes are not interpreted as clinical alerts.",
+    "sections": "Passport sections",
+    "notRecorded": "Not recorded",
+    "unknown": "Unknown",
+    "yes": "Yes",
+    "no": "No",
+    "speciesLabel": "Species",
+    "breed": "Breed",
+    "birthDate": "Date of birth",
+    "neutered": "Neutered",
+    "color": "Colour",
+    "donorStatus": "Blood donor status",
+    "donorBody": "Eligibility is shown only from the registered donor profile.",
+    "emptyActivityTitle": "No health activity yet",
+    "emptyActivityBody": "Clinical visits, vaccinations, prescriptions, appointments and weight entries will appear here.",
+    "errorTitle": "The passport could not be loaded",
+    "errorBody": "The health record is temporarily unavailable. Try again without changing any information.",
+    "notFoundTitle": "Passport unavailable",
+    "notFoundBody": "This record does not exist or is not available to your account.",
+    "noPetsTitle": "Your first passport starts with a pet",
+    "noPetsBody": "Add a pet profile to begin collecting identity, vaccination and clinical records in one protected place.",
+    "privateByDefault": "Private by default",
+    "retry": "Try again",
+    "tabs": {
+      "overview": "Overview",
+      "timeline": "Timeline",
+      "vaccinations": "Vaccinations",
+      "records": "Medical records",
+      "prescriptions": "Prescriptions",
+      "appointments": "Appointments",
+      "tracking": "Care tracking",
+      "documents": "Documents"
+    },
+    "status": {
+      "upToDate": "Up to date",
+      "dueSoon": "Due soon",
+      "overdue": "Overdue",
+      "active": "Active",
+      "completed": "Completed",
+      "scheduled": "Scheduled",
+      "unknown": "Unknown"
+    },
+    "species": {
+      "DOG": "Dog",
+      "CAT": "Cat",
+      "BIRD": "Bird",
+      "RABBIT": "Rabbit",
+      "HAMSTER": "Hamster",
+      "REPTILE": "Reptile",
+      "FISH": "Fish",
+      "FERRET": "Ferret",
+      "GUINEA_PIG": "Guinea pig",
+      "OTHER": "Other"
+    },
+    "gender": { "male": "Male", "female": "Female", "unknown": "Unknown" },
+    "overview": {
+      "identityEyebrow": "Recorded identity",
+      "identityTitle": "Identity details",
+      "activityEyebrow": "Latest entries",
+      "activityTitle": "Recent health activity"
+    },
+    "timeline": {
+      "eyebrow": "Clinical chronology",
+      "title": "Medical timeline",
+      "filters": {
+        "all": "All entries",
+        "medicalRecord": "Records",
+        "vaccination": "Vaccinations",
+        "prescription": "Prescriptions",
+        "appointment": "Appointments",
+        "weight": "Weight"
+      },
+      "types": {
+        "medicalRecord": "Medical record",
+        "vaccination": "Vaccination",
+        "prescription": "Prescription",
+        "appointment": "Appointment",
+        "weight": "Weight"
+      }
+    },
+    "vaccination": {
+      "eyebrow": "Preventive care",
+      "title": "Vaccination history",
+      "administered": "Administered {date}",
+      "due": "Next due {date}",
+      "noDueDate": "No due date recorded",
+      "emptyTitle": "No vaccinations recorded",
+      "emptyBody": "Verified vaccination entries will appear here after a care team records them."
+    },
+    "records": {
+      "eyebrow": "Clinical record",
+      "title": "Visits and findings",
+      "attachmentCount": "{count, plural, one {# attachment} other {# attachments}}",
+      "private": "Private",
+      "diagnosis": "Diagnosis",
+      "treatment": "Treatment",
+      "emptyTitle": "No medical records yet",
+      "emptyBody": "Diagnosis, procedures, lab results and visit notes will appear here."
+    },
+    "prescriptions": {
+      "eyebrow": "Prescribed care",
+      "title": "Medication history",
+      "issuedBy": "Prescribed by {name}",
+      "emptyTitle": "No prescriptions recorded",
+      "emptyBody": "Medication instructions from authorized veterinarians will appear here."
+    },
+    "appointments": {
+      "eyebrow": "Care schedule",
+      "title": "Appointments",
+      "emptyTitle": "No appointments recorded",
+      "emptyBody": "Upcoming and past clinic appointments will appear here.",
+      "groups": {
+        "upcoming": "Upcoming",
+        "past": "Past",
+        "cancelled": "Cancelled"
+      }
+    },
+    "tracking": {
+      "weightEyebrow": "Recorded measurements",
+      "weightTitle": "Weight history",
+      "emptyWeightTitle": "No weight history",
+      "emptyWeightBody": "Recorded weight measurements will appear here.",
+      "reminderEyebrow": "Upcoming care",
+      "reminderTitle": "Reminders",
+      "emptyReminderTitle": "No active reminders",
+      "emptyReminderBody": "Vaccination, medication and routine-care reminders will appear here."
+    },
+    "documents": {
+      "eyebrow": "Clinical files",
+      "title": "Documents",
+      "medicalAttachment": "Medical attachment",
+      "vaccineCertificate": "Vaccine certificate",
+      "open": "Open document",
+      "emptyTitle": "No documents attached",
+      "emptyBody": "Existing medical attachments and vaccination certificates will appear here."
+    },
+    "actions": {
+      "forPet": "This entry will be added to {name}'s protected passport.",
+      "close": "Close dialog",
+      "cancel": "Cancel",
+      "save": "Save entry",
+      "saving": "Saving…",
+      "error": "The entry could not be saved. Check the details and try again.",
+      "notes": "Notes",
+      "visitDate": "Visit date",
+      "validation": {
+        "required": "Complete the required fields.",
+        "date": "Use the date format YYYY-MM-DD.",
+        "weight": "Enter a weight greater than zero.",
+        "drug": "Each medicine needs a name, dosage, frequency and duration."
+      },
+      "success": {
+        "profile": "Pet profile updated",
+        "weight": "Weight entry saved",
+        "record": "Medical record saved",
+        "vaccination": "Vaccination saved",
+        "prescription": "Prescription saved"
+      },
+      "profile": {
+        "button": "Edit profile",
+        "title": "Edit pet profile",
+        "name": "Pet name",
+        "gender": "Sex",
+        "breed": "Breed",
+        "color": "Colour",
+        "birthDate": "Date of birth",
+        "microchip": "Microchip number",
+        "neutered": "Neutered",
+        "genders": { "male": "Male", "female": "Female", "unknown": "Unknown" }
+      },
+      "weight": {
+        "button": "Add weight",
+        "title": "Record weight",
+        "value": "Weight in kilograms"
+      },
+      "record": {
+        "button": "Add medical record",
+        "title": "New medical record",
+        "type": "Record type",
+        "name": "Record title",
+        "description": "Clinical description",
+        "diagnosis": "Diagnosis",
+        "treatment": "Treatment",
+        "private": "Mark as private",
+        "attachments": "Attachment URLs",
+        "attachmentsHint": "One complete URL per line",
+        "types": {
+          "DIAGNOSIS": "Diagnosis",
+          "SURGERY": "Surgery",
+          "DENTAL": "Dental",
+          "DEWORMING": "Deworming",
+          "LAB_RESULT": "Lab result",
+          "IMAGING": "Imaging",
+          "PROGRESS_NOTE": "Progress note",
+          "DISCHARGE_SUMMARY": "Discharge"
+        }
+      },
+      "vaccination": {
+        "button": "Record vaccination",
+        "title": "Record vaccination",
+        "name": "Vaccine name",
+        "manufacturer": "Manufacturer",
+        "batch": "Batch number",
+        "administeredAt": "Administered date",
+        "nextDueAt": "Next due date"
+      },
+      "prescription": {
+        "button": "Add prescription",
+        "title": "New prescription",
+        "drug": "Medicine {number}",
+        "removeDrug": "Remove medicine",
+        "addDrug": "Add another medicine",
+        "name": "Medicine name",
+        "dosage": "Dosage",
+        "frequency": "Frequency",
+        "duration": "Duration",
+        "validUntil": "Valid until",
+        "refills": "Refills",
+        "instructions": "Instructions"
+      }
+    },
+    "donor": {
+      "ELIGIBLE": "Eligible",
+      "INELIGIBLE": "Ineligible",
+      "ON_HOLD": "On hold",
+      "PENDING_REVIEW": "Pending review",
+      "notRegistered": "Not registered"
+    }
   }
 }

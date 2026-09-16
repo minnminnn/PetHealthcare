@@ -41,7 +41,6 @@ const menuMotion = {
 };
 
 export function Navbar({ locale }: NavbarProps) {
-  
   const t = useTranslations("nav");
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -233,7 +232,7 @@ export function Navbar({ locale }: NavbarProps) {
                             label: t("dashboard"),
                           },
                           {
-                            href: "/dashboard/owner/pets" as const,
+                            href: "/dashboard/pets" as const,
                             icon: Heart,
                             label: t("myPets"),
                           },

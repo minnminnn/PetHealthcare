@@ -18,7 +18,7 @@ export const searchRouter = createTRPCRouter({
         lat: z.number().optional(),
         lng: z.number().optional(),
         limit: z.number().default(10),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       const { query, species, is24h, isExoticSpec, lat, lng, limit } = input;
@@ -26,8 +26,8 @@ export const searchRouter = createTRPCRouter({
       // Unaccent the query for Vietnamese fuzzy matching
       const unaccentedQuery = query.toLowerCase();
 
-      if (lat && lng) {
-        // Spatial + fuzzy search: combine pg_trgm similarity with distance
+      if (lat !== undefined && lng !== undefined) {
+        // Fuzzy search with a portable latitude/longitude distance calculation.
         const results = await ctx.db.$queryRawUnsafe<
           Array<{
             id: string;
@@ -59,14 +59,13 @@ export const searchRouter = createTRPCRouter({
               similarity(unaccent(lower(address)), unaccent(lower($1))),
               similarity(unaccent(lower(city)), unaccent(lower($1)))
             ) AS similarity,
-            CASE
-              WHEN location IS NOT NULL THEN
-                ST_Distance(
-                  location::geography,
-                  ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography
-                ) / 1000.0
-              ELSE NULL
-            END AS distance_km
+            CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL THEN
+              6371 * 2 * ASIN(SQRT(LEAST(1,
+                POWER(SIN(RADIANS(latitude - $2) / 2), 2) +
+                COS(RADIANS($2)) * COS(RADIANS(latitude)) *
+                POWER(SIN(RADIANS(longitude - $3) / 2), 2)
+              )))
+            ELSE NULL END AS distance_km
           FROM clinics
           WHERE
             GREATEST(
@@ -138,7 +137,13 @@ export const searchRouter = createTRPCRouter({
     .input(z.object({ query: z.string().min(1).max(100) }))
     .query(async ({ ctx, input }) => {
       const results = await ctx.db.$queryRawUnsafe<
-        Array<{ id: string; name: string; slug: string; city: string; logoUrl: string | null }>
+        Array<{
+          id: string;
+          name: string;
+          slug: string;
+          city: string;
+          logoUrl: string | null;
+        }>
       >(
         `
         SELECT id, name, slug, city, logo_url AS "logoUrl"

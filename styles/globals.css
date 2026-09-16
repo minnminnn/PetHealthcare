@@ -267,6 +267,69 @@
   }
 }
 
+/* Digital passport: paper-and-ink hierarchy translated to dark surfaces. */
+@media (prefers-color-scheme: dark) {
+  .passport-shell {
+    background: #151614 !important;
+    color-scheme: dark;
+  }
+
+  .passport-dialog {
+    background: #20211f !important;
+    color-scheme: dark;
+  }
+
+  .passport-shell .bg-\[\#f8f8f5\],
+  .passport-dialog .bg-\[\#f8f8f5\] {
+    background-color: #20211f !important;
+  }
+
+  .passport-shell .bg-secondary-100,
+  .passport-dialog .bg-secondary-100 {
+    background-color: #292a28 !important;
+  }
+
+  .passport-shell .bg-secondary-200,
+  .passport-dialog .bg-secondary-200 {
+    background-color: #393a37 !important;
+  }
+
+  .passport-shell .text-secondary-950,
+  .passport-shell .text-secondary-900,
+  .passport-dialog .text-secondary-950,
+  .passport-dialog .text-secondary-900 {
+    color: #f3f3f0 !important;
+  }
+
+  .passport-shell .text-secondary-800,
+  .passport-shell .text-secondary-700,
+  .passport-dialog .text-secondary-800,
+  .passport-dialog .text-secondary-700 {
+    color: #d1d2cc !important;
+  }
+
+  .passport-shell .text-secondary-600,
+  .passport-shell .text-secondary-500,
+  .passport-dialog .text-secondary-600,
+  .passport-dialog .text-secondary-500 {
+    color: #a4a69f !important;
+  }
+
+  .passport-shell .text-secondary-400,
+  .passport-dialog .text-secondary-400 {
+    color: #85877f !important;
+  }
+
+  .passport-shell [class*="border-black/"],
+  .passport-dialog [class*="border-black/"] {
+    border-color: rgb(255 255 255 / 0.1) !important;
+  }
+
+  .passport-shell .bg-black\/\[0\.015\] {
+    background-color: rgb(255 255 255 / 0.02) !important;
+  }
+}
+
 .leaflet-popup-content-wrapper {
   @apply rounded-xl border border-slate-200 shadow-card;
 }
@@ -297,5 +360,13 @@
   }
   .passport-print {
     @apply shadow-none border-none;
+  }
+  body,
+  main {
+    background: #ffffff !important;
+  }
+  main {
+    min-height: auto !important;
+    padding: 0 !important;
   }
 }

@@ -9,6 +9,18 @@ export const remindersRouter = createTRPCRouter({
   list: protectedProcedure
     .input(z.object({ petId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
+      if (input.petId) {
+        const pet = await ctx.db.pet.findFirst({
+          where: {
+            id: input.petId,
+            ownerId: ctx.session.user.id,
+            isActive: true,
+          },
+          select: { id: true },
+        });
+        if (!pet) throw new TRPCError({ code: "NOT_FOUND" });
+      }
+
       return ctx.db.reminder.findMany({
         where: {
           ...(input.petId
@@ -74,6 +86,15 @@ export const remindersRouter = createTRPCRouter({
   toggle: protectedProcedure
     .input(z.object({ reminderId: z.string(), isActive: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
+      const reminder = await ctx.db.reminder.findFirst({
+        where: {
+          id: input.reminderId,
+          pet: { ownerId: ctx.session.user.id, isActive: true },
+        },
+        select: { id: true },
+      });
+      if (!reminder) throw new TRPCError({ code: "NOT_FOUND" });
+
       return ctx.db.reminder.update({
         where: { id: input.reminderId },
         data: { isActive: input.isActive },
@@ -84,6 +105,15 @@ export const remindersRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ reminderId: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      const reminder = await ctx.db.reminder.findFirst({
+        where: {
+          id: input.reminderId,
+          pet: { ownerId: ctx.session.user.id, isActive: true },
+        },
+        select: { id: true },
+      });
+      if (!reminder) throw new TRPCError({ code: "NOT_FOUND" });
+
       return ctx.db.reminder.delete({ where: { id: input.reminderId } });
     }),
 });

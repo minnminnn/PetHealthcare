@@ -6,6 +6,7 @@ import {
 } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { BloodType, Species, DonorStatus } from "@prisma/client";
+import { requireClinicAccess } from "@/server/authz/clinic-access";
 
 export const bloodDonorRouter = createTRPCRouter({
   /** Register a pet as a blood donor */
@@ -115,6 +116,8 @@ export const bloodDonorRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      await requireClinicAccess(ctx.db, ctx.session.user, input.clinicId);
+
       const request = await ctx.db.bloodRequest.create({ data: input });
 
       // Find eligible donors in same city and create alert records

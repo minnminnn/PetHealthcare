@@ -186,5 +186,261 @@
     "thinking": "Đang phân tích...",
     "disclaimer": "Đây là hướng dẫn sơ cứu khẩn cấp. Hãy đến phòng khám thú y ngay lập tức.",
     "streamingNote": "Đang tạo hướng dẫn sơ cứu..."
+  },
+  "petPassport": {
+    "eyebrow": "Hồ sơ sức khỏe được bảo vệ",
+    "title": "Hộ chiếu thú cưng điện tử",
+    "print": "In hồ sơ",
+    "printDisclaimer": "Hồ sơ sức khỏe riêng tư được tạo từ dữ liệu đã ghi nhận trên PetCare. Tài liệu này không thay thế đánh giá của bác sĩ thú y.",
+    "secureShare": "Chia sẻ bảo mật",
+    "secureShareUnavailable": "Liên kết chia sẻ bảo mật có thời hạn chưa được cấu hình",
+    "identityRecord": "Hồ sơ danh tính xác thực",
+    "switchPet": "Đổi thú cưng",
+    "petPhotoAlt": "Ảnh chân dung của {name}",
+    "passportNumber": "Hộ chiếu",
+    "microchip": "Mã vi mạch",
+    "owner": "Chủ nuôi",
+    "sex": "Giới tính",
+    "identityNote": "Hồ sơ riêng tư này chỉ hiển thị cho chủ nuôi và đội ngũ chăm sóc được cấp quyền.",
+    "careSnapshot": "Tóm tắt chăm sóc",
+    "snapshotTitle": "Điều cần lưu ý cho {name} lúc này",
+    "snapshotBody": "Bản tóm tắt dựa trên ngày tháng và hồ sơ lâm sàng đã ghi nhận. Thông tin còn thiếu sẽ hiển thị là chưa rõ, không mặc định là khỏe mạnh.",
+    "vaccinations": "Tiêm phòng",
+    "medication": "Thuốc",
+    "lastVisit": "Lần khám gần nhất",
+    "nextAppointment": "Lịch hẹn tiếp theo",
+    "currentWeight": "Cân nặng hiện tại",
+    "bloodType": "Nhóm máu",
+    "activeCount": "{count, plural, =0 {Không có} other {# đang dùng}}",
+    "noneScheduled": "Chưa có lịch",
+    "criticalInfo": "Thông tin y tế quan trọng",
+    "criticalInfoEmpty": "Chưa có dữ liệu có cấu trúc về dị ứng hoặc bệnh mãn tính. Ghi chú chung không được tự động diễn giải thành cảnh báo lâm sàng.",
+    "sections": "Các mục hộ chiếu",
+    "notRecorded": "Chưa ghi nhận",
+    "unknown": "Chưa rõ",
+    "yes": "Có",
+    "no": "Không",
+    "speciesLabel": "Loài",
+    "breed": "Giống",
+    "birthDate": "Ngày sinh",
+    "neutered": "Đã triệt sản",
+    "color": "Màu lông",
+    "donorStatus": "Trạng thái hiến máu",
+    "donorBody": "Khả năng hiến máu chỉ được hiển thị từ hồ sơ người hiến đã đăng ký.",
+    "emptyActivityTitle": "Chưa có hoạt động sức khỏe",
+    "emptyActivityBody": "Lịch khám, tiêm phòng, đơn thuốc, lịch hẹn và cân nặng sẽ xuất hiện tại đây.",
+    "errorTitle": "Không thể tải hộ chiếu",
+    "errorBody": "Hồ sơ sức khỏe đang tạm thời không khả dụng. Hãy thử lại mà không thay đổi dữ liệu.",
+    "notFoundTitle": "Hộ chiếu không khả dụng",
+    "notFoundBody": "Hồ sơ này không tồn tại hoặc tài khoản của bạn không có quyền truy cập.",
+    "noPetsTitle": "Hộ chiếu đầu tiên bắt đầu từ hồ sơ thú cưng",
+    "noPetsBody": "Thêm hồ sơ thú cưng để bắt đầu lưu danh tính, tiêm phòng và dữ liệu lâm sàng tại một nơi được bảo vệ.",
+    "privateByDefault": "Riêng tư theo mặc định",
+    "retry": "Thử lại",
+    "tabs": {
+      "overview": "Tổng quan",
+      "timeline": "Dòng thời gian",
+      "vaccinations": "Tiêm phòng",
+      "records": "Hồ sơ y tế",
+      "prescriptions": "Đơn thuốc",
+      "appointments": "Lịch hẹn",
+      "tracking": "Theo dõi chăm sóc",
+      "documents": "Tài liệu"
+    },
+    "status": {
+      "upToDate": "Còn hiệu lực",
+      "dueSoon": "Sắp đến hạn",
+      "overdue": "Quá hạn",
+      "active": "Đang dùng",
+      "completed": "Đã hoàn tất",
+      "scheduled": "Đã lên lịch",
+      "unknown": "Chưa rõ"
+    },
+    "species": {
+      "DOG": "Chó",
+      "CAT": "Mèo",
+      "BIRD": "Chim",
+      "RABBIT": "Thỏ",
+      "HAMSTER": "Hamster",
+      "REPTILE": "Bò sát",
+      "FISH": "Cá",
+      "FERRET": "Chồn sương",
+      "GUINEA_PIG": "Bọ ú",
+      "OTHER": "Khác"
+    },
+    "gender": { "male": "Đực", "female": "Cái", "unknown": "Chưa rõ" },
+    "overview": {
+      "identityEyebrow": "Danh tính đã ghi nhận",
+      "identityTitle": "Thông tin định danh",
+      "activityEyebrow": "Cập nhật mới nhất",
+      "activityTitle": "Hoạt động sức khỏe gần đây"
+    },
+    "timeline": {
+      "eyebrow": "Trình tự lâm sàng",
+      "title": "Dòng thời gian y tế",
+      "filters": {
+        "all": "Tất cả",
+        "medicalRecord": "Hồ sơ",
+        "vaccination": "Tiêm phòng",
+        "prescription": "Đơn thuốc",
+        "appointment": "Lịch hẹn",
+        "weight": "Cân nặng"
+      },
+      "types": {
+        "medicalRecord": "Hồ sơ y tế",
+        "vaccination": "Tiêm phòng",
+        "prescription": "Đơn thuốc",
+        "appointment": "Lịch hẹn",
+        "weight": "Cân nặng"
+      }
+    },
+    "vaccination": {
+      "eyebrow": "Chăm sóc phòng ngừa",
+      "title": "Lịch sử tiêm phòng",
+      "administered": "Đã tiêm {date}",
+      "due": "Hạn tiếp theo {date}",
+      "noDueDate": "Chưa ghi ngày đến hạn",
+      "emptyTitle": "Chưa có dữ liệu tiêm phòng",
+      "emptyBody": "Thông tin tiêm phòng đã xác thực sẽ hiển thị sau khi đội ngũ chăm sóc ghi nhận."
+    },
+    "records": {
+      "eyebrow": "Hồ sơ lâm sàng",
+      "title": "Lịch khám và kết quả",
+      "attachmentCount": "{count} tệp đính kèm",
+      "private": "Riêng tư",
+      "diagnosis": "Chẩn đoán",
+      "treatment": "Điều trị",
+      "emptyTitle": "Chưa có hồ sơ y tế",
+      "emptyBody": "Chẩn đoán, thủ thuật, kết quả xét nghiệm và ghi chú khám sẽ hiển thị tại đây."
+    },
+    "prescriptions": {
+      "eyebrow": "Chăm sóc theo đơn",
+      "title": "Lịch sử dùng thuốc",
+      "issuedBy": "Kê bởi {name}",
+      "emptyTitle": "Chưa có đơn thuốc",
+      "emptyBody": "Hướng dẫn dùng thuốc từ bác sĩ thú y được cấp quyền sẽ hiển thị tại đây."
+    },
+    "appointments": {
+      "eyebrow": "Lịch chăm sóc",
+      "title": "Lịch hẹn",
+      "emptyTitle": "Chưa có lịch hẹn",
+      "emptyBody": "Các lịch hẹn sắp tới và đã qua sẽ hiển thị tại đây.",
+      "groups": {
+        "upcoming": "Sắp tới",
+        "past": "Đã qua",
+        "cancelled": "Đã hủy"
+      }
+    },
+    "tracking": {
+      "weightEyebrow": "Số đo đã ghi nhận",
+      "weightTitle": "Lịch sử cân nặng",
+      "emptyWeightTitle": "Chưa có lịch sử cân nặng",
+      "emptyWeightBody": "Các lần ghi nhận cân nặng sẽ hiển thị tại đây.",
+      "reminderEyebrow": "Chăm sóc sắp tới",
+      "reminderTitle": "Nhắc nhở",
+      "emptyReminderTitle": "Không có nhắc nhở đang hoạt động",
+      "emptyReminderBody": "Nhắc tiêm phòng, dùng thuốc và chăm sóc định kỳ sẽ hiển thị tại đây."
+    },
+    "documents": {
+      "eyebrow": "Tệp lâm sàng",
+      "title": "Tài liệu",
+      "medicalAttachment": "Tệp y tế",
+      "vaccineCertificate": "Chứng nhận tiêm phòng",
+      "open": "Mở tài liệu",
+      "emptyTitle": "Chưa có tài liệu đính kèm",
+      "emptyBody": "Tệp y tế và chứng nhận tiêm phòng hiện có sẽ hiển thị tại đây."
+    },
+    "actions": {
+      "forPet": "Thông tin này sẽ được thêm vào hộ chiếu được bảo vệ của {name}.",
+      "close": "Đóng hộp thoại",
+      "cancel": "Hủy",
+      "save": "Lưu thông tin",
+      "saving": "Đang lưu…",
+      "error": "Không thể lưu. Hãy kiểm tra thông tin và thử lại.",
+      "notes": "Ghi chú",
+      "visitDate": "Ngày khám",
+      "validation": {
+        "required": "Hãy điền các trường bắt buộc.",
+        "date": "Dùng định dạng ngày YYYY-MM-DD.",
+        "weight": "Nhập cân nặng lớn hơn 0.",
+        "drug": "Mỗi loại thuốc cần tên, liều lượng, tần suất và thời gian dùng."
+      },
+      "success": {
+        "profile": "Đã cập nhật hồ sơ thú cưng",
+        "weight": "Đã lưu cân nặng",
+        "record": "Đã lưu hồ sơ y tế",
+        "vaccination": "Đã lưu thông tin tiêm phòng",
+        "prescription": "Đã lưu đơn thuốc"
+      },
+      "profile": {
+        "button": "Sửa hồ sơ",
+        "title": "Chỉnh sửa hồ sơ thú cưng",
+        "name": "Tên thú cưng",
+        "gender": "Giới tính",
+        "breed": "Giống",
+        "color": "Màu lông",
+        "birthDate": "Ngày sinh",
+        "microchip": "Mã vi mạch",
+        "neutered": "Đã triệt sản",
+        "genders": { "male": "Đực", "female": "Cái", "unknown": "Chưa rõ" }
+      },
+      "weight": {
+        "button": "Thêm cân nặng",
+        "title": "Ghi nhận cân nặng",
+        "value": "Cân nặng (kg)"
+      },
+      "record": {
+        "button": "Thêm hồ sơ y tế",
+        "title": "Hồ sơ y tế mới",
+        "type": "Loại hồ sơ",
+        "name": "Tiêu đề hồ sơ",
+        "description": "Mô tả lâm sàng",
+        "diagnosis": "Chẩn đoán",
+        "treatment": "Điều trị",
+        "private": "Đánh dấu riêng tư",
+        "attachments": "URL tệp đính kèm",
+        "attachmentsHint": "Mỗi dòng một URL đầy đủ",
+        "types": {
+          "DIAGNOSIS": "Chẩn đoán",
+          "SURGERY": "Phẫu thuật",
+          "DENTAL": "Nha khoa",
+          "DEWORMING": "Tẩy giun",
+          "LAB_RESULT": "Xét nghiệm",
+          "IMAGING": "Chẩn đoán hình ảnh",
+          "PROGRESS_NOTE": "Ghi chú tiến triển",
+          "DISCHARGE_SUMMARY": "Xuất viện"
+        }
+      },
+      "vaccination": {
+        "button": "Ghi nhận tiêm phòng",
+        "title": "Ghi nhận tiêm phòng",
+        "name": "Tên vắc-xin",
+        "manufacturer": "Nhà sản xuất",
+        "batch": "Số lô",
+        "administeredAt": "Ngày tiêm",
+        "nextDueAt": "Ngày đến hạn tiếp theo"
+      },
+      "prescription": {
+        "button": "Thêm đơn thuốc",
+        "title": "Đơn thuốc mới",
+        "drug": "Thuốc {number}",
+        "removeDrug": "Xóa thuốc",
+        "addDrug": "Thêm loại thuốc",
+        "name": "Tên thuốc",
+        "dosage": "Liều lượng",
+        "frequency": "Tần suất",
+        "duration": "Thời gian dùng",
+        "validUntil": "Hiệu lực đến",
+        "refills": "Số lần cấp lại",
+        "instructions": "Hướng dẫn"
+      }
+    },
+    "donor": {
+      "ELIGIBLE": "Đủ điều kiện",
+      "INELIGIBLE": "Không đủ điều kiện",
+      "ON_HOLD": "Tạm dừng",
+      "PENDING_REVIEW": "Đang xét duyệt",
+      "notRegistered": "Chưa đăng ký"
+    }
   }
 }

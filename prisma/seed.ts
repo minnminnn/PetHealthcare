@@ -10,7 +10,14 @@
  *  6. Sample toxic substances & drug entries
  */
 
-import { PrismaClient, Role, Species, BloodType, ClinicStatus, DonorStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  Species,
+  BloodType,
+  ClinicStatus,
+  DonorStatus,
+} from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -22,18 +29,11 @@ async function main() {
   await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
   await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "pg_trgm";`);
   await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "unaccent";`);
-  await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "postgis";`);
-
-  // ── PostGIS Spatial Index on clinics.location ──────────────────────────────
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS clinics_location_gist
-    ON clinics USING GIST (location);
-  `);
 
   // ── pg_trgm GIN Index on clinics.name_unaccented ──────────────────────────
   //await prisma.$executeRawUnsafe(`
-    //CREATE INDEX IF NOT EXISTS clinics_name_trgm_idx
-    //ON clinics USING GIN (name_unaccented gin_trgm_ops);
+  //CREATE INDEX IF NOT EXISTS clinics_name_trgm_idx
+  //ON clinics USING GIN (name_unaccented gin_trgm_ops);
   //`);
 
   // ── pg_trgm GIN Index on pets.name ────────────────────────────────────────
@@ -102,7 +102,14 @@ async function main() {
       isVerified: true,
       is24h: true,
       isExoticSpec: true,
-      specializations: [Species.CAT, Species.DOG, Species.BIRD, Species.RABBIT, Species.REPTILE, Species.HAMSTER],
+      specializations: [
+        Species.CAT,
+        Species.DOG,
+        Species.BIRD,
+        Species.RABBIT,
+        Species.REPTILE,
+        Species.HAMSTER,
+      ],
       latitude: 21.0285,
       longitude: 105.7968,
       rating: 4.9,
@@ -118,13 +125,6 @@ async function main() {
       },
     },
   });
-
-  // Update clinic with PostGIS spatial point
-  await prisma.$executeRawUnsafe(`
-    UPDATE clinics
-    SET location = ST_SetSRID(ST_MakePoint(${clinic.longitude}, ${clinic.latitude}), 4326)
-    WHERE id = '${clinic.id}';
-  `);
 
   console.log(`✅ Clinic created: ${clinic.name}`);
 
@@ -188,18 +188,39 @@ async function main() {
       passportNumber: "PET-KEM-2024-VN-001",
       bloodType: BloodType.FELINE_A,
       weight: 4.2,
-      notes: "Kem là mèo British Longhair thuần chủng, rất thân thiện và hiền lành. Đã triệt sản tháng 8/2024. Thức ăn ưa thích: Royal Canin Kitten 36.",
+      notes:
+        "Kem là mèo British Longhair thuần chủng, rất thân thiện và hiền lành. Đã triệt sản tháng 8/2024. Thức ăn ưa thích: Royal Canin Kitten 36.",
     },
   });
   console.log(`✅ Pet created: ${kem.name} (${kem.breed})`);
 
   // ── Weight History ─────────────────────────────────────────────────────────
   const weightHistory = [
-    { weight: 0.35, recordedAt: new Date("2024-03-20"), recordedBy: "BS. Trần Minh Khoa" },
-    { weight: 1.2,  recordedAt: new Date("2024-06-15"), recordedBy: "BS. Trần Minh Khoa" },
-    { weight: 2.8,  recordedAt: new Date("2024-09-10"), recordedBy: "BS. Trần Minh Khoa" },
-    { weight: 3.7,  recordedAt: new Date("2025-01-20"), recordedBy: "BS. Trần Minh Khoa" },
-    { weight: 4.2,  recordedAt: new Date("2025-09-14"), recordedBy: "BS. Trần Minh Khoa" },
+    {
+      weight: 0.35,
+      recordedAt: new Date("2024-03-20"),
+      recordedBy: "BS. Trần Minh Khoa",
+    },
+    {
+      weight: 1.2,
+      recordedAt: new Date("2024-06-15"),
+      recordedBy: "BS. Trần Minh Khoa",
+    },
+    {
+      weight: 2.8,
+      recordedAt: new Date("2024-09-10"),
+      recordedBy: "BS. Trần Minh Khoa",
+    },
+    {
+      weight: 3.7,
+      recordedAt: new Date("2025-01-20"),
+      recordedBy: "BS. Trần Minh Khoa",
+    },
+    {
+      weight: 4.2,
+      recordedAt: new Date("2025-09-14"),
+      recordedBy: "BS. Trần Minh Khoa",
+    },
   ];
 
   for (const w of weightHistory) {
@@ -277,7 +298,8 @@ async function main() {
         vetId: vet.id,
         type: "VACCINATION",
         title: "Tiêm phòng cơ bản lần 1 (FVRCP)",
-        description: "Kiểm tra sức khỏe tổng quát và tiêm phòng cơ bản lần đầu.",
+        description:
+          "Kiểm tra sức khỏe tổng quát và tiêm phòng cơ bản lần đầu.",
         diagnosis: "Tình trạng sức khỏe tốt, không có dấu hiệu bệnh lý.",
         treatment: "Tiêm Nobivac Tricat. Theo dõi phản ứng 24h.",
         visitDate: new Date("2024-04-20"),
@@ -288,9 +310,11 @@ async function main() {
         vetId: vet.id,
         type: "SURGERY",
         title: "Phẫu thuật triệt sản (Spay)",
-        description: "Triệt sản mèo cái theo yêu cầu chủ nuôi để kiểm soát sinh sản.",
+        description:
+          "Triệt sản mèo cái theo yêu cầu chủ nuôi để kiểm soát sinh sản.",
         diagnosis: "Sức khỏe tốt, phù hợp phẫu thuật.",
-        treatment: "Phẫu thuật cắt buồng trứng và tử cung. Gây mê Isoflurane. Khâu tự tiêu. Thuốc giảm đau Meloxicam 0.05mg/kg trong 3 ngày.",
+        treatment:
+          "Phẫu thuật cắt buồng trứng và tử cung. Gây mê Isoflurane. Khâu tự tiêu. Thuốc giảm đau Meloxicam 0.05mg/kg trong 3 ngày.",
         visitDate: new Date("2024-08-10"),
       },
       {
@@ -299,8 +323,10 @@ async function main() {
         vetId: vet.id,
         type: "DIAGNOSIS",
         title: "Khám định kỳ 6 tháng",
-        description: "Kiểm tra sức khỏe định kỳ, đánh giá tình trạng sau triệt sản.",
-        diagnosis: "Kem ở trạng thái sức khỏe tốt. Lông mịn, mắt sáng, tai sạch. Cân nặng đạt chuẩn 4.2kg.",
+        description:
+          "Kiểm tra sức khỏe định kỳ, đánh giá tình trạng sau triệt sản.",
+        diagnosis:
+          "Kem ở trạng thái sức khỏe tốt. Lông mịn, mắt sáng, tai sạch. Cân nặng đạt chuẩn 4.2kg.",
         treatment: "Bổ sung Omega-3 hỗ trợ lông và da. Tẩy giun định kỳ.",
         visitDate: new Date("2025-02-14"),
       },
@@ -312,7 +338,8 @@ async function main() {
         title: "Vệ sinh răng miệng",
         description: "Cao vôi răng giai đoạn nhẹ. Vệ sinh siêu âm.",
         diagnosis: "Cao vôi độ 1 ở răng hàm trên. Không có viêm nướu.",
-        treatment: "Lấy vôi răng bằng máy siêu âm. Đánh bóng răng. Hướng dẫn chải răng tại nhà.",
+        treatment:
+          "Lấy vôi răng bằng máy siêu âm. Đánh bóng răng. Hướng dẫn chải răng tại nhà.",
         visitDate: new Date("2025-06-10"),
       },
     ],
@@ -522,7 +549,9 @@ async function main() {
 
   for (const substance of toxicSubstances) {
     await prisma.toxicSubstance.upsert({
-      where: { id: `toxic-${substance.name.toLowerCase().replace(/\s+/g, "-")}` },
+      where: {
+        id: `toxic-${substance.name.toLowerCase().replace(/\s+/g, "-")}`,
+      },
       update: {},
       create: {
         id: `toxic-${substance.name.toLowerCase().replace(/\s+/g, "-")}`,
@@ -550,7 +579,8 @@ async function main() {
       status: "CONFIRMED",
       scheduledAt: new Date("2025-09-20T09:30:00.000Z"),
       durationMinutes: 30,
-      chiefComplaint: "Khám sức khỏe định kỳ, kiểm tra cân nặng và tiêm phòng nhắc lại",
+      chiefComplaint:
+        "Khám sức khỏe định kỳ, kiểm tra cân nặng và tiêm phòng nhắc lại",
       notes: "Kem đang ăn uống bình thường, không có triệu chứng bất thường.",
     },
   });

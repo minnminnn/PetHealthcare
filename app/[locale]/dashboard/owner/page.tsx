@@ -33,7 +33,7 @@ export default async function OwnerDashboardPage({
     {
       id: "pets",
       label: "Thú cưng của tôi",
-      href: "/dashboard/owner/pets",
+      href: "/dashboard/pets",
       icon: <Heart className="w-6 h-6" />,
     },
     {
@@ -59,7 +59,7 @@ export default async function OwnerDashboardPage({
     {
       id: "passport",
       label: "Hộ chiếu thú y",
-      href: "/dashboard/owner/pets",
+      href: "/dashboard/pets",
       icon: <Shield className="w-6 h-6" />,
     },
   ];
@@ -152,7 +152,7 @@ export default async function OwnerDashboardPage({
                 🐱 Thú cưng của tôi
               </h2>
               <Link
-                href="/dashboard/owner/pets"
+                href="/dashboard/pets"
                 className="text-sm text-primary-600 font-medium hover:underline flex items-center gap-1"
               >
                 Xem tất cả <ArrowRight className="w-3.5 h-3.5" />
@@ -177,7 +177,7 @@ export default async function OwnerDashboardPage({
                 </div>
               </div>
               <Link
-                href="/dashboard/owner/pets"
+                href="/dashboard/pets"
                 className="mt-4 w-full btn-medical text-sm justify-center block text-center"
               >
                 Xem hồ sơ đầy đủ
