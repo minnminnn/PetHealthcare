@@ -1,110 +1,129 @@
-'use client'
+"use client";
 
-import { AccountLink } from '@/components/auth/AccountLink'
-import { AuthShell } from '@/components/auth/AuthShell'
-import { Divider } from '@/components/auth/Divider'
-import { FormAlert } from '@/components/auth/FormAlert'
-import { FormInput } from '@/components/auth/FormInput'
-import { SocialButtons } from '@/components/auth/SocialButtons'
-import { SubmitButton } from '@/components/auth/SubmitButton'
-import { authConfig } from '@/app/auth.config'
-import { useState } from 'react'
+import { signIn } from "next-auth/react";
+import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
+
+import { AccountLink } from "@/components/auth/AccountLink";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { Divider } from "@/components/auth/Divider";
+import { FormAlert } from "@/components/auth/FormAlert";
+import { FormInput } from "@/components/auth/FormInput";
+import { SocialButtons } from "@/components/auth/SocialButtons";
+import { SubmitButton } from "@/components/auth/SubmitButton";
+import { loginSchema } from "@/lib/auth/validation";
 
 interface LoginFormState {
-  email: string
-  password: string
+  email: string;
+  password: string;
   errors: {
-    email?: string
-    password?: string
-    form?: string
+    email?: string;
+    password?: string;
+    form?: string;
+  };
+  isLoading: boolean;
+}
+
+function getSafeDestination(locale: string) {
+  const callbackUrl = new URLSearchParams(window.location.search).get(
+    "callbackUrl",
+  );
+
+  if (callbackUrl?.startsWith("/") && !callbackUrl.startsWith("//")) {
+    return callbackUrl;
   }
-  isLoading: boolean
+
+  return `/${locale}/dashboard/owner`;
 }
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
+  const locale = useLocale();
   const [formState, setFormState] = useState<LoginFormState>({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     errors: {},
     isLoading: false,
-  })
+  });
 
-  const validateForm = () => {
-    const errors: Record<string, string> = {}
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-    if (!formState.email.trim()) {
-      errors.email = 'Email is required'
-    } else if (!authConfig.validation.email.test(formState.email)) {
-      errors.email = 'Please enter a valid email address'
+    const parsed = loginSchema.safeParse({
+      email: formState.email,
+      password: formState.password,
+    });
+
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      setFormState((previous) => ({
+        ...previous,
+        errors: {
+          email: fieldErrors.email ? t("errors.validEmail") : undefined,
+          password: fieldErrors.password
+            ? t("errors.passwordRequired")
+            : undefined,
+        },
+      }));
+      return;
     }
 
-    if (!formState.password) {
-      errors.password = 'Password is required'
-    }
-
-    return errors
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const errors = validateForm()
-    if (Object.keys(errors).length > 0) {
-      setFormState((prev) => ({
-        ...prev,
-        errors,
-      }))
-      return
-    }
-
-    setFormState((prev) => ({
-      ...prev,
+    setFormState((previous) => ({
+      ...previous,
       isLoading: true,
       errors: {},
-    }))
+    }));
 
-    // Simulate API call - replace with actual backend integration
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const result = await signIn("credentials", {
+        email: parsed.data.email,
+        password: parsed.data.password,
+        redirect: false,
+      });
 
-    // Handle success - replace with actual redirect
-    console.log('Login attempt:', {
-      email: formState.email,
-      password: '[redacted]',
-    })
+      if (!result || result.error) {
+        setFormState((previous) => ({
+          ...previous,
+          isLoading: false,
+          errors: { form: t("errors.invalidCredentials") },
+        }));
+        return;
+      }
 
-    setFormState((prev) => ({
-      ...prev,
-      isLoading: false,
-    }))
-  }
+      window.location.assign(getSafeDestination(locale));
+    } catch {
+      setFormState((previous) => ({
+        ...previous,
+        isLoading: false,
+        errors: { form: t("errors.unavailable") },
+      }));
+    }
+  };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = e.target
-    setFormState((prev) => ({
-      ...prev,
+  const handleGoogleSignIn = async () => {
+    await signIn("google", { callbackUrl: getSafeDestination(locale) });
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormState((previous) => ({
+      ...previous,
       [name]: value,
-      errors: {
-        ...prev.errors,
-        [name]: undefined,
-      },
-    }))
-  }
+      errors: { ...previous.errors, [name]: undefined, form: undefined },
+    }));
+  };
 
   return (
-    <AuthShell>
+    <AuthShell tagline={t("login.tagline")} imageAlt={t("imageAlt")}>
       <div>
-        {/* Header */}
-        <h1 className="text-3xl sm:text-4xl font-semibold mb-3 tracking-tight text-[#20211F] dark:text-[#F1F1ED]">
-          Sign in
+        <h1 className="mb-3 text-3xl font-semibold tracking-tight text-[#20211F] dark:text-[#F1F1ED] sm:text-4xl">
+          {t("login.title")}
         </h1>
-        <p className="text-base font-normal text-[#676964] dark:text-[#B7B8B2] mb-8">
-          Welcome back. Enter your details to access your account.
+        <p className="mb-8 text-base font-normal text-[#676964] dark:text-[#B7B8B2]">
+          {t("login.subtitle")}
         </p>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {formState.errors.form && (
             <FormAlert message={formState.errors.form} type="error" />
           )}
@@ -113,65 +132,52 @@ export default function LoginPage() {
             id="email"
             name="email"
             type="email"
-            label="Email"
+            label={t("login.email")}
             placeholder="you@example.com"
             value={formState.email}
             onChange={handleInputChange}
             error={formState.errors.email}
             autoComplete="email"
+            inputMode="email"
             disabled={formState.isLoading}
           />
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-[#20211F] dark:text-[#F1F1ED]"
-              >
-                Password
-              </label>
-              <a
-                href="#"
-                className="text-sm text-[#D85F53] dark:text-[#EF7569] hover:text-[#B9473E] dark:hover:text-[#F18A80] transition-colors"
-              >
-                Forgot password?
-              </a>
-            </div>
-            <FormInput
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              value={formState.password}
-              onChange={handleInputChange}
-              error={formState.errors.password}
-              autoComplete="current-password"
-              showPasswordToggle
-              disabled={formState.isLoading}
-            />
-          </div>
+          <FormInput
+            id="password"
+            name="password"
+            type="password"
+            label={t("login.password")}
+            placeholder={t("login.passwordPlaceholder")}
+            value={formState.password}
+            onChange={handleInputChange}
+            error={formState.errors.password}
+            autoComplete="current-password"
+            showPasswordToggle
+            disabled={formState.isLoading}
+          />
 
-          <SubmitButton isLoading={formState.isLoading}>
-            Sign in
+          <SubmitButton
+            isLoading={formState.isLoading}
+            loadingLabel={t("login.signingIn")}
+          >
+            {t("login.submit")}
           </SubmitButton>
         </form>
 
-        {/* Divider */}
-        <Divider label="or" />
+        <Divider label={t("or")} />
 
-        {/* Social buttons */}
         <SocialButtons
-          googleLabel="Sign in with Google"
-          phoneLabel="Sign in with phone"
+          googleLabel={t("login.withGoogle")}
+          onGoogleClick={handleGoogleSignIn}
+          disabled={formState.isLoading}
         />
 
-        {/* Account switch */}
         <AccountLink
           href="/register"
-          text="Don't have an account?"
-          linkText="Create one"
+          text={t("login.noAccount")}
+          linkText={t("login.register")}
         />
       </div>
     </AuthShell>
-  )
+  );
 }

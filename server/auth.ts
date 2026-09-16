@@ -6,10 +6,11 @@ import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { Role } from "@prisma/client";
 import { z } from "zod";
+import { normalizeEmail } from "@/lib/auth/validation";
 
 const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().trim().email().transform(normalizeEmail),
+  password: z.string().min(1).max(72),
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

@@ -1,32 +1,34 @@
-'use client'
+"use client";
 
-import Image from 'next/image'
-import { ReactNode, useEffect, useState } from 'react'
+import Image from "next/image";
+import { ReactNode, useEffect, useState } from "react";
 
 interface AuthShellProps {
-  children: ReactNode
-  imageSrc?: string
-  imageAlt?: string
-  tagline?: ReactNode
+  children: ReactNode;
+  imageSrc?: string;
+  imageAlt?: string;
+  tagline?: ReactNode;
+  contentClassName?: string;
 }
 
 export function AuthShell({
   children,
-  imageSrc = '/images/petcare-consultation.png',
-  imageAlt = 'PetCare consultation',
-  tagline = 'Chăm sóc rõ ràng, từ lần khám đầu tiên.',
+  imageSrc = "/images/petcare-consultation.png",
+  imageAlt = "PetCare consultation",
+  tagline = "Chăm sóc rõ ràng, từ lần khám đầu tiên.",
+  contentClassName = "max-w-md",
 }: AuthShellProps) {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#F3F3F0] dark:bg-[#171816] text-[#20211F] dark:text-[#F1F1ED]">
-      <div className="flex min-h-screen max-w-7xl mx-auto gap-6 lg:gap-8">
+    <main className="min-h-[100dvh] bg-[#F3F3F0] text-[#20211F] dark:bg-[#171816] dark:text-[#F1F1ED]">
+      <div className="mx-auto flex min-h-[100dvh] max-w-7xl gap-8 px-5 py-5 sm:px-8 lg:px-10 lg:py-10 2xl:px-0">
         {/* Visual panel - hidden on mobile, 44% on desktop */}
-        <div className="hidden lg:flex flex-col flex-1 relative">
+        <div className="relative hidden flex-1 flex-col lg:flex">
           <div className="relative flex-1 rounded-2xl overflow-hidden">
             <Image
               src={imageSrc}
@@ -54,19 +56,19 @@ export function AuthShell({
         </div>
 
         {/* Form panel - 100% on mobile, 56% on desktop */}
-        <div className="w-full lg:flex-1 flex items-center justify-center py-16 lg:py-0">
+        <div className="flex w-full items-center justify-center py-7 sm:py-12 lg:flex-1 lg:py-0">
           <div
-            className={`w-full max-w-md transition-all duration-300 ${
-              mounted
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 translate-y-2'
+            className={`w-full ${contentClassName} transition-all duration-300 ${
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
             }`}
             style={{
-              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           >
             {/* Mobile-only brand mark */}
-            <div className="lg:hidden mb-8 text-sm font-semibold">PetCare</div>
+            <div className="mb-8 text-sm font-semibold tracking-tight lg:hidden">
+              PetCare
+            </div>
 
             {/* Form content */}
             {children}
@@ -74,5 +76,5 @@ export function AuthShell({
         </div>
       </div>
     </main>
-  )
+  );
 }

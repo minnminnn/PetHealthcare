@@ -1,18 +1,20 @@
-'use client'
+"use client";
 
-import { Loader2 } from 'lucide-react'
-import { ButtonHTMLAttributes, ReactNode } from 'react'
+import { Loader2 } from "lucide-react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
 interface SubmitButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode
-  isLoading?: boolean
+  children: ReactNode;
+  isLoading?: boolean;
+  loadingLabel?: string;
 }
 
 export function SubmitButton({
   children,
   isLoading = false,
+  loadingLabel = "Loading...",
   disabled = false,
-  className = '',
+  className = "",
   ...props
 }: SubmitButtonProps) {
   return (
@@ -25,11 +27,11 @@ export function SubmitButton({
       {isLoading ? (
         <>
           <Loader2 size={18} className="animate-spin" />
-          <span>Loading...</span>
+          <span>{loadingLabel}</span>
         </>
       ) : (
         children
       )}
     </button>
-  )
+  );
 }

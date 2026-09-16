@@ -1,44 +1,63 @@
-'use client'
+"use client";
 
-import { Mail, Phone } from 'lucide-react'
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface SocialButtonsProps {
-  googleLabel?: string
-  phoneLabel?: string
+  googleLabel?: string;
+  onGoogleClick: () => Promise<void>;
+  disabled?: boolean;
 }
 
 export function SocialButtons({
-  googleLabel = 'Sign in with Google',
-  phoneLabel = 'Sign in with phone',
+  googleLabel = "Sign in with Google",
+  onGoogleClick,
+  disabled = false,
 }: SocialButtonsProps) {
-  return (
-    <div className="space-y-3">
-      <button
-        type="button"
-        className="w-full h-12 rounded-[10px] bg-white dark:bg-[#242523] border border-[#D1D2CC] dark:border-white/14 text-[#20211F] dark:text-[#F1F1ED] font-medium text-[15px] transition-colors duration-150 hover:bg-[#F3F3F0] dark:hover:bg-[#292A28] flex items-center justify-center gap-3"
-        aria-label="Sign in with Google"
-      >
-        <svg
-          className="w-5 h-5"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-        </svg>
-        <span>{googleLabel}</span>
-      </button>
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleGoogleClick = async () => {
+    setIsLoading(true);
+    try {
+      await onGoogleClick();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div>
       <button
         type="button"
-        className="w-full h-12 rounded-[10px] bg-white dark:bg-[#242523] border border-[#D1D2CC] dark:border-white/14 text-[#20211F] dark:text-[#F1F1ED] font-medium text-[15px] transition-colors duration-150 hover:bg-[#F3F3F0] dark:hover:bg-[#292A28] flex items-center justify-center gap-3"
-        aria-label="Sign in with phone"
+        onClick={handleGoogleClick}
+        disabled={disabled || isLoading}
+        className="flex h-12 w-full items-center justify-center gap-3 rounded-[10px] border border-[#D1D2CC] bg-white text-[15px] font-medium text-[#20211F] transition-colors duration-150 hover:bg-[#EAEAE6] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/14 dark:bg-[#242523] dark:text-[#F1F1ED] dark:hover:bg-[#292A28]"
+        aria-label={googleLabel}
       >
-        <Phone size={18} className="text-[#D85F53] dark:text-[#EF7569]" />
-        <span>{phoneLabel}</span>
+        {isLoading ? (
+          <Loader2 size={18} className="animate-spin" />
+        ) : (
+          <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09A6.5 6.5 0 0 1 5.49 12c0-.73.13-1.43.35-2.09V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+        )}
+        <span>{isLoading ? `${googleLabel}…` : googleLabel}</span>
       </button>
     </div>
-  )
+  );
 }
