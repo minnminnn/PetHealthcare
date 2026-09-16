@@ -291,7 +291,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
             data-clinic-hero
             className="flex flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12"
           >
-            <nav
+            {/* <nav
               aria-label="Breadcrumb"
               className="flex items-center gap-2 text-sm text-[#676964] dark:text-[#b7b8b2]"
             >
@@ -305,7 +305,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
               <span className="font-semibold text-[#20211f] dark:text-[#f1f1ed]">
                 {copy.breadcrumbCurrent}
               </span>
-            </nav>
+            </nav> */}
 
             <div className="my-16 lg:my-10">
               <p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-[#b9473e] dark:text-[#ef7569]">
