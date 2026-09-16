@@ -127,6 +127,90 @@
       "setClosed": "Closed"
     }
   },
+  "ownerDashboard": {
+    "fallbackName": "there",
+    "accountLabel": "Owner dashboard",
+    "greeting": "Good to see you, {name}.",
+    "subtitle": "See what needs attention and keep every pet's care moving forward.",
+    "findClinic": "Find a clinic",
+    "openPassport": "Open pet passport",
+    "viewAll": "View all",
+    "date": "Date and time",
+    "clinic": "Clinic",
+    "nextAppointment": "Next appointment",
+    "careHorizon": {
+      "title": "Your care horizon",
+      "body": "The next appointment, active reminders, and upcoming vaccinations in one calm view."
+    },
+    "noAppointment": {
+      "title": "No appointment scheduled",
+      "body": "When you book a visit, the clinic, pet, and time will appear here."
+    },
+    "clinicPending": {
+      "title": "Clinic access request received",
+      "body": "You can use your owner account now. Clinic tools will unlock after verification."
+    },
+    "dataError": {
+      "title": "Some care information could not be loaded",
+      "body": "Your navigation is still available. Refresh the page to try loading the latest records again."
+    },
+    "stats": {
+      "pets": "Pets in your care",
+      "appointments": "Upcoming visits",
+      "reminders": "Active reminders",
+      "vaccines": "Vaccines due in 90 days"
+    },
+    "pets": {
+      "title": "Pets in your care",
+      "body": "Open a passport to review health records and care history.",
+      "emptyTitle": "No pet passports yet",
+      "emptyBody": "Your pets will appear here after their first passport has been created.",
+      "weight": "{weight} kg",
+      "bloodType": "Blood type {bloodType}"
+    },
+    "reminders": {
+      "title": "Coming up",
+      "body": "The next care tasks across all active pet profiles.",
+      "empty": "There are no upcoming reminders. New care tasks will appear here automatically."
+    },
+    "actions": {
+      "title": "Care shortcuts",
+      "body": "Go directly to the service you need.",
+      "clinics": {
+        "title": "Find a clinic",
+        "body": "Browse trusted local care"
+      },
+      "pharmacy": {
+        "title": "Medicine library",
+        "body": "Check veterinary medicine guidance"
+      },
+      "teleVet": {
+        "title": "Speak with a vet",
+        "body": "Start an online consultation"
+      },
+      "emergency": {
+        "title": "Emergency guidance",
+        "body": "Open immediate first-aid steps"
+      }
+    },
+    "careNote": {
+      "title": "Health records stay connected",
+      "body": "Vaccinations, visits, prescriptions, and reminders are kept together in each pet's digital passport.",
+      "action": "Review passports"
+    },
+    "species": {
+      "dog": "Dog",
+      "cat": "Cat",
+      "bird": "Bird",
+      "rabbit": "Rabbit",
+      "hamster": "Hamster",
+      "reptile": "Reptile",
+      "fish": "Fish",
+      "ferret": "Ferret",
+      "guinea_pig": "Guinea pig",
+      "other": "Other"
+    }
+  },
   "auth": {
     "imageAlt": "A veterinarian caring for a pet",
     "or": "or",

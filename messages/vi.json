@@ -127,6 +127,90 @@
       "setClosed": "Đóng cửa"
     }
   },
+  "ownerDashboard": {
+    "fallbackName": "bạn",
+    "accountLabel": "Bảng điều khiển chủ nuôi",
+    "greeting": "Rất vui được gặp lại, {name}.",
+    "subtitle": "Nắm rõ việc cần làm và duy trì lịch chăm sóc cho từng thú cưng.",
+    "findClinic": "Tìm phòng khám",
+    "openPassport": "Mở hộ chiếu thú y",
+    "viewAll": "Xem tất cả",
+    "date": "Ngày và giờ",
+    "clinic": "Phòng khám",
+    "nextAppointment": "Lịch hẹn tiếp theo",
+    "careHorizon": {
+      "title": "Lịch chăm sóc sắp tới",
+      "body": "Theo dõi lịch khám, nhắc nhở đang hoạt động và vaccine sắp đến hạn trong một màn hình."
+    },
+    "noAppointment": {
+      "title": "Chưa có lịch khám",
+      "body": "Sau khi đặt lịch, phòng khám, thú cưng và thời gian sẽ xuất hiện tại đây."
+    },
+    "clinicPending": {
+      "title": "Đã nhận yêu cầu truy cập phòng khám",
+      "body": "Bạn có thể dùng tài khoản chủ nuôi ngay. Công cụ phòng khám sẽ được mở sau khi xác minh."
+    },
+    "dataError": {
+      "title": "Không thể tải một số thông tin chăm sóc",
+      "body": "Bạn vẫn có thể dùng các liên kết điều hướng. Hãy tải lại trang để thử cập nhật hồ sơ mới nhất."
+    },
+    "stats": {
+      "pets": "Thú cưng đang chăm sóc",
+      "appointments": "Lịch khám sắp tới",
+      "reminders": "Nhắc nhở đang hoạt động",
+      "vaccines": "Vaccine đến hạn trong 90 ngày"
+    },
+    "pets": {
+      "title": "Thú cưng của bạn",
+      "body": "Mở hộ chiếu để xem hồ sơ sức khỏe và lịch sử chăm sóc.",
+      "emptyTitle": "Chưa có hộ chiếu thú cưng",
+      "emptyBody": "Thú cưng sẽ xuất hiện tại đây sau khi hộ chiếu đầu tiên được tạo.",
+      "weight": "{weight} kg",
+      "bloodType": "Nhóm máu {bloodType}"
+    },
+    "reminders": {
+      "title": "Sắp đến hạn",
+      "body": "Các việc chăm sóc tiếp theo của mọi thú cưng đang hoạt động.",
+      "empty": "Chưa có nhắc nhở sắp tới. Việc chăm sóc mới sẽ tự động xuất hiện tại đây."
+    },
+    "actions": {
+      "title": "Truy cập nhanh",
+      "body": "Đi thẳng đến dịch vụ bạn đang cần.",
+      "clinics": {
+        "title": "Tìm phòng khám",
+        "body": "Xem các cơ sở thú y đáng tin cậy"
+      },
+      "pharmacy": {
+        "title": "Thư viện thuốc",
+        "body": "Tra cứu hướng dẫn thuốc thú y"
+      },
+      "teleVet": {
+        "title": "Trao đổi với bác sĩ",
+        "body": "Bắt đầu tư vấn trực tuyến"
+      },
+      "emergency": {
+        "title": "Hướng dẫn khẩn cấp",
+        "body": "Mở ngay các bước sơ cứu cơ bản"
+      }
+    },
+    "careNote": {
+      "title": "Hồ sơ sức khỏe luôn liền mạch",
+      "body": "Vaccine, lịch khám, đơn thuốc và nhắc nhở được lưu cùng nhau trong hộ chiếu số của từng thú cưng.",
+      "action": "Xem hộ chiếu"
+    },
+    "species": {
+      "dog": "Chó",
+      "cat": "Mèo",
+      "bird": "Chim",
+      "rabbit": "Thỏ",
+      "hamster": "Hamster",
+      "reptile": "Bò sát",
+      "fish": "Cá",
+      "ferret": "Chồn sương",
+      "guinea_pig": "Bọ ú",
+      "other": "Khác"
+    }
+  },
   "auth": {
     "imageAlt": "Bác sĩ thú y đang chăm sóc thú cưng",
     "or": "hoặc",
