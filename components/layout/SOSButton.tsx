@@ -1,32 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
-  Phone,
-  Navigation,
-  X,
-  Loader2,
   Bot,
+  LocateFixed,
+  MapPin,
+  Navigation,
+  Phone,
+  Send,
+  X,
 } from "lucide-react";
 import { api } from "@/trpc/react";
 
-interface NearbyClinic {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  status: string;
-  distanceKm: number;
-  mapsUrl: string;
-  callUrl: string;
-  logoUrl: string | null;
-}
-
 export function SOSButton() {
   const t = useTranslations("sos");
+  const reduceMotion = useReducedMotion();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -35,14 +26,14 @@ export function SOSButton() {
   const [isLocating, setIsLocating] = useState(false);
   const [showTriageChat, setShowTriageChat] = useState(false);
 
-  // Query nearest emergency clinics once coords are available
   const { data: nearbyClinics, isLoading: clinicsLoading } =
     api.emergency.getNearestClinics.useQuery(
       { lat: coords?.lat ?? 0, lng: coords?.lng ?? 0 },
-      { enabled: !!coords },
+      { enabled: Boolean(coords) },
     );
 
-  // Get user location when modal opens
+  const closeModal = () => setIsModalOpen(false);
+
   const handleSOSClick = () => {
     setIsModalOpen(true);
     setIsLocating(true);
@@ -55,218 +46,242 @@ export function SOSButton() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      (position) => {
+        setCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
         setIsLocating(false);
       },
       () => {
         setGeoError(t("geoError"));
         setIsLocating(false);
-        // Fallback to Hanoi center
         setCoords({ lat: 21.0285, lng: 105.8342 });
       },
       { timeout: 8000, maximumAge: 60000 },
     );
   };
 
-  // Prevent body scroll when modal open
   useEffect(() => {
-    document.body.style.overflow = isModalOpen ? "hidden" : "";
+    if (!isModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeModal();
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isModalOpen]);
 
+  const panelMotion = reduceMotion
+    ? { initial: false as const, animate: { opacity: 1 }, exit: { opacity: 0 } }
+    : {
+        initial: { opacity: 0, y: 28, scale: 0.98 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: 18, scale: 0.98 },
+      };
+
   return (
     <>
-      {/* ── Floating SOS Button ─────────────────────────────────────────────── */}
-      <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+      <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 sm:bottom-6 sm:right-6">
         <motion.button
-          onClick={handleSOSClick}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="relative flex h-12 w-12 items-center justify-center gap-2.5 rounded-xl bg-emergency text-sm font-bold text-white shadow-emergency transition-all duration-200 hover:shadow-xl sm:w-auto sm:px-5"
-          aria-label="SOS Emergency"
           id="sos-emergency-btn"
+          type="button"
+          onClick={handleSOSClick}
+          whileHover={reduceMotion ? undefined : { y: -2 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+          aria-label={t("button")}
+          className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#8f342e] bg-[#b9473e] px-3.5 text-sm font-semibold text-[#fff9f7] shadow-[0_12px_30px_rgba(99,35,30,0.24)] outline-none transition-colors hover:bg-[#a13d35] focus-visible:ring-2 focus-visible:ring-[#b9473e] focus-visible:ring-offset-2 sm:px-4"
         >
-          {/* Pulse rings */}
-          <span className="absolute inset-0 rounded-xl bg-emergency animate-pulse-ring opacity-60" />
-          <span className="absolute inset-0 rounded-xl bg-emergency animate-pulse-ring opacity-40 [animation-delay:0.4s]" />
-
-          {/* Icon + Label */}
-          <div className="relative flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 animate-pulse-dot" />
-            <span className="hidden tracking-wide sm:inline">SOS</span>
-          </div>
+          <AlertTriangle
+            className="h-[18px] w-[18px]"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+          <span className="hidden whitespace-nowrap sm:inline">
+            {t("button")}
+          </span>
         </motion.button>
       </div>
 
-      {/* ── SOS Modal ──────────────────────────────────────────────────────────── */}
       <AnimatePresence>
         {isModalOpen && (
           <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
+            <motion.button
+              type="button"
+              aria-label={t("close")}
+              initial={reduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50"
+              onClick={closeModal}
+              className="fixed inset-0 z-50 cursor-default bg-[#151614]/72 backdrop-blur-[2px]"
             />
 
-            {/* Modal Panel */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 40 }}
-              transition={{ type: "spring", damping: 24, stiffness: 400 }}
-              className="fixed inset-x-4 bottom-4 sm:inset-auto sm:bottom-8 sm:right-8 sm:w-[420px] z-50 bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+            <motion.section
+              {...panelMotion}
+              transition={{ type: "spring", damping: 28, stiffness: 360 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="sos-dialog-title"
+              className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 flex max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl border border-black/10 bg-[#f8f8f5] text-[#20211f] shadow-[0_28px_80px_rgba(16,17,15,0.34)] dark:border-white/10 dark:bg-[#20211f] dark:text-[#f1f1ed] sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[440px]"
             >
-              {/* Header */}
-              <div className="bg-gradient-emergency p-6 flex-shrink-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                      <AlertTriangle className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="text-white font-bold text-xl leading-tight">
-                        {t("title")}
-                      </h2>
-                      <p className="text-red-100 text-sm mt-0.5">
-                        {isLocating
-                          ? "Đang định vị..."
-                          : coords
-                            ? "Đã xác định vị trí"
-                            : t("subtitle")}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="p-2 bg-white/20 hover:bg-white/30 rounded-xl text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+              <div className="h-1 shrink-0 bg-[#b9473e] dark:bg-[#ef7569]" />
 
-                {/* Tab switcher */}
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => setShowTriageChat(false)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      !showTriageChat
-                        ? "bg-white text-red-600"
-                        : "bg-white/20 text-white hover:bg-white/30"
-                    }`}
-                  >
-                    <Navigation
-                      className="mr-1.5 inline h-4 w-4"
+              <header className="shrink-0 border-b border-black/10 px-5 pb-4 pt-5 dark:border-white/10 sm:px-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eee0dc] text-[#b9473e] dark:bg-[#3c2926] dark:text-[#ef7569]">
+                    <AlertTriangle
+                      className="h-5 w-5"
+                      strokeWidth={2}
                       aria-hidden="true"
                     />
-                    Phòng khám
-                  </button>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2
+                      id="sos-dialog-title"
+                      className="text-lg font-semibold leading-tight tracking-[-0.025em] sm:text-xl dark:text-[#f1f1ed]"
+                    >
+                      {t("title")}
+                    </h2>
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs leading-5 text-[#686963] dark:text-[#b6b7b2]">
+                      <LocateFixed
+                        className="h-3.5 w-3.5 shrink-0"
+                        aria-hidden="true"
+                      />
+                      {isLocating
+                        ? t("locating")
+                        : coords
+                          ? t("located")
+                          : t("subtitle")}
+                    </p>
+                  </div>
                   <button
-                    onClick={() => setShowTriageChat(true)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                      showTriageChat
-                        ? "bg-white text-red-600"
-                        : "bg-white/20 text-white hover:bg-white/30"
-                    }`}
+                    type="button"
+                    onClick={closeModal}
+                    aria-label={t("close")}
+                    className="-mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/10 text-[#686963] transition-colors hover:bg-black/[0.04] hover:text-[#20211f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] dark:border-white/10 dark:text-[#b6b7b2] dark:hover:bg-white/[0.06] dark:hover:text-[#f1f1ed]"
                   >
-                    <Bot className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
-                    AI Sơ cứu
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-              </div>
 
-              {/* Content */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <div
+                  role="tablist"
+                  aria-label={t("modeLabel")}
+                  className="mt-5 grid grid-cols-2 rounded-xl bg-black/[0.045] p-1 dark:bg-white/[0.06]"
+                >
+                  <ModeButton
+                    active={!showTriageChat}
+                    onClick={() => setShowTriageChat(false)}
+                    icon={Navigation}
+                    label={t("clinicsTab")}
+                  />
+                  <ModeButton
+                    active={showTriageChat}
+                    onClick={() => setShowTriageChat(true)}
+                    icon={Bot}
+                    label={t("triageTab")}
+                  />
+                </div>
+              </header>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
                 {!showTriageChat ? (
-                  <>
-                    {/* Loading state */}
-                    {(isLocating || clinicsLoading) && (
-                      <div className="flex flex-col items-center justify-center py-10 gap-3">
-                        <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
-                        <p className="text-sm text-slate-500">{t("loading")}</p>
-                      </div>
-                    )}
+                  <div className="space-y-3">
+                    {(isLocating || clinicsLoading) && <ClinicSkeleton />}
 
-                    {/* Geo error */}
                     {geoError && !clinicsLoading && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800">
+                      <div className="flex gap-3 rounded-xl border border-[#b9473e]/25 bg-[#eee0dc] p-4 text-sm leading-6 text-[#7c302b] dark:bg-[#3c2926] dark:text-[#f2aaa3]">
                         <AlertTriangle
-                          className="mr-1.5 inline h-4 w-4"
+                          className="mt-0.5 h-4 w-4 shrink-0"
                           aria-hidden="true"
                         />
-                        {geoError}
+                        <p>{geoError}</p>
                       </div>
                     )}
 
-                    {/* Clinic cards */}
-                    {nearbyClinics?.map((clinic, idx) => (
-                      <motion.div
-                        key={clinic.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.08 }}
-                        className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-red-600">
-                              #{idx + 1}
+                    {!isLocating &&
+                      !clinicsLoading &&
+                      nearbyClinics?.map((clinic) => (
+                        <motion.article
+                          key={clinic.id}
+                          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-black/10 bg-white/55 p-4 dark:border-white/10 dark:bg-white/[0.035]"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black/10 text-[#b9473e] dark:border-white/10 dark:text-[#ef7569]">
+                              <MapPin className="h-4 w-4" aria-hidden="true" />
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-slate-800 text-sm leading-tight">
-                                {clinic.name}
-                              </h3>
-                              <p className="text-xs text-slate-500 mt-0.5">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <h3 className="text-sm font-semibold leading-5">
+                                  {clinic.name}
+                                </h3>
+                                <span className="shrink-0 text-xs font-semibold text-[#686963] dark:text-[#b6b7b2]">
+                                  {t("distance", {
+                                    distance: clinic.distanceKm,
+                                  })}
+                                </span>
+                              </div>
+                              <p className="mt-1 text-xs leading-5 text-[#686963] dark:text-[#b6b7b2]">
                                 {clinic.address}
                               </p>
                             </div>
                           </div>
-                          <div className="bg-green-100 text-green-700 px-2 py-1 rounded-lg text-xs font-bold flex-shrink-0">
-                            {clinic.distanceKm} km
+
+                          <div className="mt-4 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
+                            <a
+                              href={clinic.callUrl}
+                              className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#b9473e] px-4 text-sm font-semibold text-[#fff9f7] transition-colors hover:bg-[#a13d35] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] dark:bg-[#ef7569] dark:text-[#151614]"
+                            >
+                              <Phone className="h-4 w-4" aria-hidden="true" />
+                              {t("call")}
+                            </a>
+                            <a
+                              href={clinic.mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-black/10 px-4 text-sm font-semibold transition-colors hover:bg-black/[0.04] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] dark:border-white/10 dark:hover:bg-white/[0.06]"
+                            >
+                              <Navigation
+                                className="h-4 w-4"
+                                aria-hidden="true"
+                              />
+                              {t("directions")}
+                            </a>
                           </div>
-                        </div>
+                        </motion.article>
+                      ))}
 
-                        <div className="flex gap-2">
-                          <a
-                            href={clinic.callUrl}
-                            className="flex-1 flex items-center justify-center gap-2 bg-emergency text-white py-2.5 rounded-xl text-sm font-bold hover:bg-red-600 transition-colors"
-                          >
-                            <Phone className="w-4 h-4" />
-                            Gọi ngay
-                          </a>
-                          <a
-                            href={clinic.mapsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 flex items-center justify-center gap-2 bg-primary-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-primary-700 transition-colors"
-                          >
-                            <Navigation className="w-4 h-4" />
-                            Chỉ đường
-                          </a>
+                    {nearbyClinics?.length === 0 &&
+                      !isLocating &&
+                      !clinicsLoading && (
+                        <div className="px-5 py-10 text-center">
+                          <MapPin
+                            className="mx-auto h-6 w-6 text-[#b9473e] dark:text-[#ef7569]"
+                            aria-hidden="true"
+                          />
+                          <h3 className="mt-4 text-sm font-semibold">
+                            {t("emptyTitle")}
+                          </h3>
+                          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[#686963] dark:text-[#b6b7b2]">
+                            {t("emptyBody")}
+                          </p>
                         </div>
-                      </motion.div>
-                    ))}
-
-                    {nearbyClinics?.length === 0 && !clinicsLoading && (
-                      <div className="text-center py-10 text-slate-500 text-sm">
-                        <p>Không tìm thấy phòng khám 24/7 trong khu vực.</p>
-                        <p className="mt-1">
-                          Hãy gọi đường dây khẩn cấp thú y:{" "}
-                          <strong>1900 xxxx</strong>
-                        </p>
-                      </div>
-                    )}
-                  </>
+                      )}
+                  </div>
                 ) : (
                   <AITriagePanel />
                 )}
               </div>
-            </motion.div>
+            </motion.section>
           </>
         )}
       </AnimatePresence>
@@ -274,33 +289,83 @@ export function SOSButton() {
   );
 }
 
-// ─── AI Triage Panel ─────────────────────────────────────────────────────────
+function ModeButton({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Navigation;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#b9473e] ${
+        active
+          ? "bg-[#f8f8f5] text-[#20211f] shadow-[0_1px_2px_rgba(32,33,31,0.08)] dark:bg-[#343531] dark:text-[#f1f1ed]"
+          : "text-[#686963] hover:text-[#20211f] dark:text-[#b6b7b2] dark:hover:text-[#f1f1ed]"
+      }`}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+      {label}
+    </button>
+  );
+}
+
+function ClinicSkeleton() {
+  return (
+    <div className="space-y-3" aria-hidden="true">
+      {[0, 1].map((item) => (
+        <div
+          key={item}
+          className="rounded-xl border border-black/10 p-4 dark:border-white/10"
+        >
+          <div className="flex gap-3">
+            <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-black/[0.06] motion-reduce:animate-none dark:bg-white/[0.08]" />
+            <div className="flex-1 space-y-2 py-1">
+              <div className="h-3 w-3/5 animate-pulse rounded bg-black/[0.07] motion-reduce:animate-none dark:bg-white/[0.09]" />
+              <div className="h-3 w-4/5 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none dark:bg-white/[0.07]" />
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="h-11 animate-pulse rounded-xl bg-black/[0.06] motion-reduce:animate-none dark:bg-white/[0.08]" />
+            <div className="h-11 animate-pulse rounded-xl bg-black/[0.04] motion-reduce:animate-none dark:bg-white/[0.06]" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function AITriagePanel() {
+  const t = useTranslations("sos");
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
-  >([
-    {
-      role: "assistant",
-      content:
-        "Tôi là trợ lý sơ cứu khẩn cấp. Hãy mô tả tình trạng của thú cưng để tôi hướng dẫn bạn ngay.\n\n**Lưu ý:** Đây là hướng dẫn sơ cứu tạm thời. Hãy đến phòng khám thú y NGAY LẬP TỨC!",
-    },
-  ]);
+  >([{ role: "assistant", content: t("triageIntro") }]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
 
   const sendMessage = async () => {
     if (!input.trim() || isStreaming) return;
-    const userMsg = input.trim();
+    const userMessage = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMsg }]);
+    setMessages((current) => [
+      ...current,
+      { role: "user", content: userMessage },
+    ]);
     setIsStreaming(true);
 
     try {
       const response = await fetch("/api/triage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg, history: messages }),
+        body: JSON.stringify({ message: userMessage, history: messages }),
       });
 
       if (!response.body) throw new Error("No response body");
@@ -309,15 +374,18 @@ function AITriagePanel() {
       const decoder = new TextDecoder();
       let accumulated = "";
 
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: "" },
+      ]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
 
-        setMessages((prev) => {
-          const updated = [...prev];
+        setMessages((current) => {
+          const updated = [...current];
           updated[updated.length - 1] = {
             role: "assistant",
             content: accumulated,
@@ -326,13 +394,9 @@ function AITriagePanel() {
         });
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "❌ Lỗi kết nối. Vui lòng gọi trực tiếp đến phòng khám khẩn cấp.",
-        },
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: t("triageError") },
       ]);
     } finally {
       setIsStreaming(false);
@@ -340,51 +404,70 @@ function AITriagePanel() {
   };
 
   return (
-    <div className="flex flex-col h-[340px]">
-      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-        {messages.map((msg, idx) => (
+    <div className="flex min-h-[360px] flex-col">
+      <div className="mb-3 flex gap-2.5 rounded-xl border border-[#b9473e]/20 bg-[#eee0dc] p-3 text-xs leading-5 text-[#7c302b] dark:bg-[#3c2926] dark:text-[#f2aaa3]">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+        <p>{t("triageWarning")}</p>
+      </div>
+
+      <div
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1"
+        aria-live="polite"
+      >
+        {messages.map((message, index) => (
           <div
-            key={idx}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            key={index}
+            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
-                msg.role === "user"
-                  ? "bg-primary-600 text-white rounded-br-sm"
-                  : "bg-slate-100 text-slate-800 rounded-bl-sm"
+              className={`max-w-[88%] whitespace-pre-line rounded-xl px-3.5 py-2.5 text-sm leading-6 ${
+                message.role === "user"
+                  ? "bg-[#b9473e] text-[#fff9f7] dark:bg-[#ef7569] dark:text-[#151614]"
+                  : "border border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/[0.04]"
               }`}
             >
-              {msg.role === "assistant" && (
-                <Bot className="w-3.5 h-3.5 inline mr-1.5 text-primary-600 -mt-0.5" />
+              {message.role === "assistant" && (
+                <Bot
+                  className="mr-1.5 inline h-3.5 w-3.5 text-[#b9473e] dark:text-[#ef7569]"
+                  aria-hidden="true"
+                />
               )}
-              {msg.content}
+              {message.content}
               {isStreaming &&
-                idx === messages.length - 1 &&
-                msg.role === "assistant" && (
-                  <span className="inline-block w-1.5 h-4 bg-primary-400 ml-1 animate-pulse rounded-sm" />
+                index === messages.length - 1 &&
+                message.role === "assistant" && (
+                  <span className="ml-1 inline-block h-3.5 w-1 animate-pulse rounded-sm bg-[#b9473e] motion-reduce:animate-none dark:bg-[#ef7569]" />
                 )}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-2 mt-3 pt-3 border-t border-slate-200">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Mô tả tình trạng thú cưng..."
-          className="flex-1 px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-100"
-          disabled={isStreaming}
-        />
-        <button
-          onClick={sendMessage}
-          disabled={isStreaming || !input.trim()}
-          className="px-4 py-2.5 bg-emergency text-white rounded-xl text-sm font-semibold disabled:opacity-50 hover:bg-red-600 transition-colors"
-        >
-          Gửi
-        </button>
+      <div className="mt-4 border-t border-black/10 pt-4 dark:border-white/10">
+        <label htmlFor="sos-triage-input" className="text-xs font-semibold">
+          {t("triagePrompt")}
+        </label>
+        <div className="mt-2 flex gap-2">
+          <input
+            id="sos-triage-input"
+            type="text"
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={(event) => event.key === "Enter" && sendMessage()}
+            placeholder={t("inputPlaceholder")}
+            disabled={isStreaming}
+            className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white/60 px-3.5 py-2.5 text-sm outline-none placeholder:text-[#777872] focus:border-[#b9473e] focus:ring-2 focus:ring-[#b9473e]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.04] dark:placeholder:text-[#92938d]"
+          />
+          <button
+            type="button"
+            onClick={sendMessage}
+            disabled={isStreaming || !input.trim()}
+            aria-label={t("send")}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#b9473e] text-[#fff9f7] transition-colors hover:bg-[#a13d35] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] disabled:cursor-not-allowed disabled:opacity-45 dark:bg-[#ef7569] dark:text-[#151614]"
+          >
+            <Send className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </div>
   );

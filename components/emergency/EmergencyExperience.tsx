@@ -304,7 +304,7 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
                 <a
                   href="tel:1800599990"
                   id="emergency-call-btn"
-                  className="inline-flex min-h-14 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl bg-[#d85f53] px-6 text-base font-bold text-[#1a1b19] transition hover:-translate-y-0.5 hover:bg-[#ef7569] active:translate-y-px"
+                  className="inline-flex min-h-14 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl bg-[#d85f53] px-6 text-base font-bold text-[#1a1b19]  transition hover:-translate-y-0.5 hover:bg-[#ef7569] active:translate-y-px"
                 >
                   <Phone className="h-5 w-5" strokeWidth={1.9} />
                   {copy.callHotline}

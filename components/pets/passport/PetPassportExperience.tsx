@@ -370,13 +370,15 @@ export function PetPassportExperience({ petId }: { petId: string }) {
                     {t("snapshotBody")}
                   </p>
                 </div>
-                <StatusPill
-                  value={vaccinationStatus}
-                  label={statusLabel(vaccinationStatus)}
-                />
+                <div className="self-start">
+                  <StatusPill
+                    value={vaccinationStatus}
+                    label={statusLabel(vaccinationStatus)}
+                  />
+                </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-2 border-t border-black/10 md:grid-cols-3 xl:grid-cols-6">
+              <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden border-t dark:border-[#30312e] border-[#d9d9d2] md:grid-cols-3 xl:grid-cols-6">
                 <SnapshotItem
                   icon={Syringe}
                   label={t("vaccinations")}
@@ -575,7 +577,7 @@ function SnapshotItem({
   meta?: string;
 }) {
   return (
-    <div className="border-b border-black/10 py-4 pr-4 odd:border-r odd:pl-0 even:pl-4 md:[&:nth-child(3)]:border-r-0 md:[&:nth-child(4)]:pl-0 xl:border-b-0 xl:border-r xl:px-4 xl:first:pl-0 xl:last:border-r-0">
+    <div className="bg-[#f8f8f5] px-4 py-4 first:pl-0 last:pr-0">
       <Icon className="h-4 w-4 text-primary-600" aria-hidden="true" />
       <p className="mt-3 text-xs font-medium text-secondary-500">{label}</p>
       <p className="mt-1 text-sm font-semibold text-secondary-900">{value}</p>

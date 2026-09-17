@@ -438,7 +438,7 @@ export function PharmacyExperience({ locale }: { locale: Locale }) {
               <span className="text-[#f1f1ed]">{copy.page}</span>
             </nav> */}
 
-            <h1 className="max-w-5xl text-[clamp(2.75rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.065em] text-[#f1f1ed]">
+            <h1 className="max-w-3xl text-[clamp(2.75rem,7vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.065em] text-[#f1f1ed]">
               {copy.heroTitle}
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-[#d6d7d0] sm:text-lg">{copy.heroBody}</p>
