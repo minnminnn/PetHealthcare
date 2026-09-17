@@ -23,22 +23,15 @@ import {
   Siren,
   Thermometer,
   Wind,
+  Loader2,
   type LucideIcon,
 } from "lucide-react";
 import { Link } from "@/lib/navigation";
+import { api } from "@/trpc/react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 type Locale = "vi" | "en";
-
-interface EmergencyClinic {
-  id: string;
-  name: string;
-  phone: string;
-  address: string;
-  distance: number;
-  waitTime: Record<Locale, string>;
-}
 
 interface FirstAidTip {
   id: string;
@@ -47,33 +40,6 @@ interface FirstAidTip {
   description: Record<Locale, string>;
   action: Record<Locale, string>;
 }
-
-const EMERGENCY_CLINICS: EmergencyClinic[] = [
-  {
-    id: "e1",
-    name: "Phòng khám Quốc Tế Sài Gòn Pet",
-    phone: "028 3823 0000",
-    address: "45 Nguyễn Thị Minh Khai, Q.1, TP.HCM",
-    distance: 0.8,
-    waitTime: { vi: "Dưới 5 phút", en: "Under 5 minutes" },
-  },
-  {
-    id: "e2",
-    name: "Animal Emergency Center HCM",
-    phone: "028 6250 0000",
-    address: "160 Phan Đình Phùng, Phú Nhuận, TP.HCM",
-    distance: 1.5,
-    waitTime: { vi: "10-15 phút", en: "10-15 minutes" },
-  },
-  {
-    id: "e3",
-    name: "Pet SOS 24H Bình Thạnh",
-    phone: "028 3516 0000",
-    address: "72 Đinh Bộ Lĩnh, Bình Thạnh, TP.HCM",
-    distance: 2.3,
-    waitTime: { vi: "15-20 phút", en: "15-20 minutes" },
-  },
-];
 
 const FIRST_AID_TIPS: FirstAidTip[] = [
   {
@@ -173,8 +139,10 @@ const COPY = {
     bringBody: "Đem theo bao bì thuốc, chất nghi độc và hồ sơ điều trị nếu có.",
     clinicsTitle: "Phòng khám cấp cứu gần bạn",
     clinicsBody: "Thông tin chờ chỉ để tham khảo. Hãy gọi để xác nhận trước khi đến.",
+    clinicsEmpty: "Cho phép truy cập vị trí để tìm phòng khám cấp cứu 24/7 đã xác minh gần bạn.",
+    locating: "Đang xác định vị trí…",
+    locationError: "Không thể truy cập vị trí. Hãy kiểm tra quyền vị trí trên trình duyệt.",
     open: "Đang trực",
-    estimatedWait: "Chờ dự kiến",
     callNow: "Gọi ngay",
     directions: "Chỉ đường",
     guideTitle: "Sơ cứu trong lúc chờ hỗ trợ",
@@ -202,8 +170,10 @@ const COPY = {
     bringBody: "Take medicine packaging, suspected toxins, and treatment records with you.",
     clinicsTitle: "Emergency clinics near you",
     clinicsBody: "Wait information is indicative only. Call the clinic to confirm before travelling.",
+    clinicsEmpty: "Share your location to find the nearest verified 24/7 emergency clinics.",
+    locating: "Finding your location…",
+    locationError: "We could not access your location. Check your browser location permission.",
     open: "On duty",
-    estimatedWait: "Estimated wait",
     callNow: "Call now",
     directions: "Directions",
     guideTitle: "First aid while help is on the way",
@@ -221,10 +191,37 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
   const root = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
   const [activeTip, setActiveTip] = useState(FIRST_AID_TIPS[0].id);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState("");
   const copy = COPY[locale];
   const selectedTip =
     FIRST_AID_TIPS.find((tip) => tip.id === activeTip) ?? FIRST_AID_TIPS[0];
   const SelectedIcon = selectedTip.icon;
+  const emergencyClinics = api.emergency.getNearestClinics.useQuery(
+    { lat: coords?.lat ?? 0, lng: coords?.lng ?? 0, radiusKm: 50 },
+    { enabled: coords !== null, staleTime: 30_000 },
+  );
+
+  const findNearbyClinics = () => {
+    setLocationError("");
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords: position }) => {
+        setCoords({ lat: position.latitude, lng: position.longitude });
+        setIsLocating(false);
+        window.setTimeout(
+          () => document.getElementById("emergency-clinics")?.scrollIntoView({ behavior: "smooth" }),
+          100,
+        );
+      },
+      () => {
+        setLocationError(copy.locationError);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 300_000 },
+    );
+  };
 
   // useGSAP(
   //   () => {
@@ -309,14 +306,25 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
                   <Phone className="h-5 w-5" strokeWidth={1.9} />
                   {copy.callHotline}
                 </a>
-                <a
-                  href="#emergency-clinics"
+                <button
+                  type="button"
+                  onClick={findNearbyClinics}
+                  disabled={isLocating}
                   className="inline-flex min-h-14 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl border border-[#a9aaa4] px-6 text-base font-bold text-[#393a37] transition hover:border-[#b9473e] hover:text-[#b9473e] active:translate-y-px dark:border-white/20 dark:text-[#e7e7e2] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
                 >
-                  <MapPin className="h-5 w-5" strokeWidth={1.9} />
-                  {copy.findClinic}
-                </a>
+                  {isLocating ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <MapPin className="h-5 w-5" strokeWidth={1.9} />
+                  )}
+                  {isLocating ? copy.locating : copy.findClinic}
+                </button>
               </div>
+              {locationError && (
+                <p className="mt-3 text-sm font-semibold text-[#b9473e] dark:text-[#ef7569]">
+                  {locationError}
+                </p>
+              )}
             </div>
 
             <div className="group relative min-h-[28rem] overflow-hidden lg:m-3 lg:min-h-0 lg:rounded-xl">
@@ -399,7 +407,18 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
           </p>
 
           <div className="mt-12 border-t border-[#c4c5be] dark:border-white/15">
-            {EMERGENCY_CLINICS.map((clinic) => (
+            {emergencyClinics.isFetching && (
+              <div className="flex min-h-40 items-center justify-center gap-3 text-sm text-[#676964] dark:text-[#b7b8b2]">
+                <Loader2 className="h-5 w-5 animate-spin text-[#b9473e] dark:text-[#ef7569]" />
+                {copy.locating}
+              </div>
+            )}
+            {!emergencyClinics.isFetching && (emergencyClinics.data?.length ?? 0) === 0 && (
+              <div className="py-12 text-sm leading-6 text-[#676964] dark:text-[#b7b8b2]">
+                {copy.clinicsEmpty}
+              </div>
+            )}
+            {emergencyClinics.data?.map((clinic) => (
               <article
                 key={clinic.id}
                 className="group grid gap-6 border-b border-[#c4c5be] py-7 dark:border-white/15 md:grid-cols-[1fr_auto] md:items-center"
@@ -411,7 +430,7 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
                       {copy.open}
                     </span>
                     <span className="text-xs text-[#74766f] dark:text-[#92948d]">
-                      {clinic.distance.toLocaleString(
+                      {clinic.distanceKm?.toLocaleString(
                         locale === "vi" ? "vi-VN" : "en-US",
                       )}{" "}
                       km
@@ -424,15 +443,11 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
                     <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.7} />
                     {clinic.address}
                   </p>
-                  <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#5d5f59] dark:text-[#c6c7c0]">
-                    <Clock3 className="h-4 w-4" strokeWidth={1.8} />
-                    {copy.estimatedWait}: {clinic.waitTime[locale]}
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap gap-3 md:justify-end">
                   <Link
-                    href={`/clinics/${clinic.id}`}
+                    href={`/clinics?q=${encodeURIComponent(clinic.name)}`}
                     className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#b4b6af] px-4 text-sm font-bold text-[#393a37] transition hover:border-[#b9473e] hover:text-[#b9473e] active:translate-y-px dark:border-white/20 dark:text-[#d6d7d0] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
                   >
                     <MapPin className="h-4 w-4" strokeWidth={1.8} />

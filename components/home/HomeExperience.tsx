@@ -21,12 +21,12 @@ import {
 } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import {
-  HOME_CLINICS,
   HOME_CONTENT,
   HOME_FEATURES,
   HOME_STACK_LAYERS,
   type HomeLocale,
 } from "@/lib/homepage-design";
+import { api } from "@/trpc/react";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -106,7 +106,12 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
   const [clinicIndex, setClinicIndex] = useState(0);
   const copy = HOME_CONTENT[locale];
   const journey = JOURNEY_COPY[locale];
-  const clinic = HOME_CLINICS[clinicIndex];
+  const featuredClinics = api.clinics.discover.useQuery(
+    { sort: "rating", limit: 3 },
+    { staleTime: 60_000 },
+  );
+  const clinics = featuredClinics.data ?? [];
+  const clinic = clinics[clinicIndex] ?? clinics[0];
 
   useGSAP(
     () => {
@@ -176,9 +181,10 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
   );
 
   const changeClinic = (direction: -1 | 1) => {
+    if (!clinics.length) return;
     setClinicIndex(
       (current) =>
-        (current + direction + HOME_CLINICS.length) % HOME_CLINICS.length,
+        (current + direction + clinics.length) % clinics.length,
     );
   };
 
@@ -398,6 +404,7 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
                 <button
                   type="button"
                   onClick={() => changeClinic(-1)}
+                  disabled={clinics.length < 2}
                   aria-label={
                     locale === "vi" ? "Phòng khám trước" : "Previous clinic"
                   }
@@ -408,6 +415,7 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
                 <button
                   type="button"
                   onClick={() => changeClinic(1)}
+                  disabled={clinics.length < 2}
                   aria-label={
                     locale === "vi" ? "Phòng khám tiếp theo" : "Next clinic"
                   }
@@ -418,27 +426,38 @@ export function HomeExperience({ locale }: { locale: HomeLocale }) {
               </div>
             </div>
 
-            <div key={clinic.name} className="animate-fade-in">
-              <div className="flex items-center gap-2 text-[#d85f53]">
-                <Star className="h-5 w-5 fill-current" aria-hidden="true" />
-                <span className="text-2xl font-bold text-[#20211f] dark:text-[#f1f1ed]">
-                  {clinic.rating}
-                </span>
-                <span className="text-sm text-[#676964] dark:text-[#b7b8b2]">
-                  ({clinic.reviews})
-                </span>
+            {clinic ? (
+              <div key={clinic.id} className="animate-fade-in">
+                <div className="flex items-center gap-2 text-[#d85f53]">
+                  <Star className="h-5 w-5 fill-current" aria-hidden="true" />
+                  <span className="text-2xl font-bold text-[#20211f] dark:text-[#f1f1ed]">
+                    {clinic.rating.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-[#676964] dark:text-[#b7b8b2]">
+                    ({new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(clinic.reviewCount)})
+                  </span>
+                </div>
+                <h3 className="mt-5 max-w-lg text-3xl font-medium leading-tight tracking-[-0.03em] dark:text-[#f1f1ed]">
+                  {clinic.name}
+                </h3>
+                <p className="mt-3 text-sm leading-6 text-[#676964] dark:text-[#b7b8b2]">
+                  {clinic.address}
+                </p>
+                <Link
+                  href={`/clinics?q=${encodeURIComponent(clinic.name)}`}
+                  className="mt-7 inline-flex items-center gap-2 whitespace-nowrap font-bold hover:text-[#b9473e] dark:hover:text-[#ef7569]"
+                >
+                  {copy.secondaryCta}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
               </div>
-              <h3 className="mt-5 max-w-lg text-3xl font-medium leading-tight tracking-[-0.03em] dark:text-[#f1f1ed]">
-                {clinic.name}
-              </h3>
-              <Link
-                href="/clinics"
-                className="mt-7 inline-flex items-center gap-2 whitespace-nowrap font-bold hover:text-[#b9473e] dark:hover:text-[#ef7569]"
-              >
-                {copy.secondaryCta}
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
+            ) : (
+              <p className="max-w-md text-sm leading-6 text-[#676964] dark:text-[#b7b8b2]">
+                {locale === "vi"
+                  ? "Chưa có phòng khám đã xác minh để giới thiệu."
+                  : "There are no verified clinics to feature yet."}
+              </p>
+            )}
           </div>
         </div>
       </section>

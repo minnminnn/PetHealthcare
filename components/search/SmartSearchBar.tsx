@@ -261,7 +261,9 @@ export function SmartSearchBar({ locale, compact = false }: SmartSearchBarProps)
                 {suggestions.map((clinic) => (
                   <button
                     key={clinic.id}
-                    onClick={() => router.push(`/clinics/${clinic.slug}`)}
+                    onClick={() =>
+                      router.push(`/clinics?q=${encodeURIComponent(clinic.name)}`)
+                    }
                     className="flex items-center gap-3 w-full px-4 py-3 hover:bg-primary-50 transition-colors text-left"
                   >
                     <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">

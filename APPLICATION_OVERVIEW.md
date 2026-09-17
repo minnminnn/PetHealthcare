@@ -110,13 +110,13 @@ The dedicated page includes:
 The floating SOS control is available across the localized application and includes:
 
 - Browser geolocation
-- A Hanoi fallback location when geolocation fails
+- No assumed fallback location when geolocation is unavailable
 - Nearest emergency clinic lookup through tRPC
 - Distance, phone, and map links
 - Loading and location-error states
 - An AI first-aid chat panel
 
-The AI triage endpoint uses Google Gemini through the Vercel AI SDK. It streams short Vietnamese first-aid guidance, prioritizes immediate veterinary care, and is explicitly instructed not to diagnose or prescribe medicine.
+The AI triage endpoint uses Google Gemini through the Vercel AI SDK. It streams localized pet-health and first-aid guidance, preserves recent conversation context, prioritizes immediate veterinary care, and is explicitly instructed not to diagnose or prescribe medicine. When the owner shares a location, the endpoint can ground clinic recommendations with nearby verified clinic records from the application database.
 
 ## Pharmacy and toxicology
 

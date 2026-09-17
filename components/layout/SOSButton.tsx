@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Bot,
@@ -17,6 +17,7 @@ import { api } from "@/trpc/react";
 
 export function SOSButton() {
   const t = useTranslations("sos");
+  const locale = useLocale();
   const reduceMotion = useReducedMotion();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
@@ -56,7 +57,7 @@ export function SOSButton() {
       () => {
         setGeoError(t("geoError"));
         setIsLocating(false);
-        setCoords({ lat: 21.0285, lng: 105.8342 });
+        setCoords(null);
       },
       { timeout: 8000, maximumAge: 60000 },
     );
@@ -278,7 +279,10 @@ export function SOSButton() {
                       )}
                   </div>
                 ) : (
-                  <AITriagePanel />
+                  <AITriagePanel
+                    coords={coords}
+                    locale={locale === "en" ? "en" : "vi"}
+                  />
                 )}
               </div>
             </motion.section>
@@ -343,13 +347,27 @@ function ClinicSkeleton() {
   );
 }
 
-function AITriagePanel() {
+function AITriagePanel({
+  coords,
+  locale,
+}: {
+  coords: { lat: number; lng: number } | null;
+  locale: "vi" | "en";
+}) {
   const t = useTranslations("sos");
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([{ role: "assistant", content: t("triageIntro") }]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const requestController = useRef<AbortController | null>(null);
+
+  useEffect(
+    () => () => {
+      requestController.current?.abort();
+    },
+    [],
+  );
 
   const sendMessage = async () => {
     if (!input.trim() || isStreaming) return;
@@ -362,13 +380,26 @@ function AITriagePanel() {
     setIsStreaming(true);
 
     try {
+      requestController.current?.abort();
+      const controller = new AbortController();
+      requestController.current = controller;
       const response = await fetch("/api/triage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, history: messages }),
+        signal: controller.signal,
+        body: JSON.stringify({
+          message: userMessage,
+          history: messages,
+          locale,
+          location: coords
+            ? { latitude: coords.lat, longitude: coords.lng }
+            : undefined,
+        }),
       });
 
-      if (!response.body) throw new Error("No response body");
+      if (!response.ok || !response.body) {
+        throw new Error(`PetCare AI request failed (${response.status})`);
+      }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -393,12 +424,14 @@ function AITriagePanel() {
           return updated;
         });
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       setMessages((current) => [
         ...current,
         { role: "assistant", content: t("triageError") },
       ]);
     } finally {
+      requestController.current = null;
       setIsStreaming(false);
     }
   };
@@ -432,7 +465,7 @@ function AITriagePanel() {
                   aria-hidden="true"
                 />
               )}
-              {message.content}
+              <AIMessageContent content={message.content} />
               {isStreaming &&
                 index === messages.length - 1 &&
                 message.role === "assistant" && (
@@ -456,6 +489,7 @@ function AITriagePanel() {
             onKeyDown={(event) => event.key === "Enter" && sendMessage()}
             placeholder={t("inputPlaceholder")}
             disabled={isStreaming}
+            maxLength={4000}
             className="min-w-0 flex-1 rounded-xl border border-black/15 bg-white/60 px-3.5 py-2.5 text-sm outline-none placeholder:text-[#777872] focus:border-[#b9473e] focus:ring-2 focus:ring-[#b9473e]/15 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/15 dark:bg-white/[0.04] dark:placeholder:text-[#92938d]"
           />
           <button
@@ -470,5 +504,23 @@ function AITriagePanel() {
         </div>
       </div>
     </div>
+  );
+}
+
+function AIMessageContent({ content }: { content: string }) {
+  return (
+    <>
+      {content.split("\n").map((line, lineIndex) => (
+        <span key={`${lineIndex}-${line.slice(0, 12)}`} className="block min-h-3">
+          {line.split(/(\*\*[^*]+\*\*)/g).map((part, partIndex) =>
+            part.startsWith("**") && part.endsWith("**") ? (
+              <strong key={partIndex}>{part.slice(2, -2)}</strong>
+            ) : (
+              part
+            ),
+          )}
+        </span>
+      ))}
+    </>
   );
 }

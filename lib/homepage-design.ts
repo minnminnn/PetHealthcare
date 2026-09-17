@@ -90,9 +90,3 @@ export const HOME_BENTO_LAYOUT = [
 ] as const;
 
 export const HOME_STACK_LAYERS = [1, 2, 3] as const;
-
-export const HOME_CLINICS = [
-  { name: "Phòng khám Quốc Tế Hà Nội", rating: "4.9", reviews: "842" },
-  { name: "Animal Care Center HCM", rating: "4.8", reviews: "1,203" },
-  { name: "PetVet Đà Nẵng", rating: "4.7", reviews: "456" },
-] as const;

@@ -1,5 +1,6 @@
 
 import "@/styles/globals.css";
+import "leaflet/dist/leaflet.css";
 import { type Metadata, type Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { setRequestLocale } from "next-intl/server";

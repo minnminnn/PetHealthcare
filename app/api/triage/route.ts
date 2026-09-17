@@ -1,49 +1,142 @@
 import { streamText } from "ai";
 import { google } from "@ai-sdk/google";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { ZodError } from "zod";
+import { env } from "@/env";
+import { db } from "@/server/db";
+import { PETCARE_SYSTEM_PROMPT } from "@/server/ai/petcare-system-prompt";
+import { discoverClinics } from "@/server/services/clinic-discovery";
+import {
+  buildClinicContext,
+  createSlidingWindowRateLimiter,
+  resolveAIModel,
+  triageRequestSchema,
+} from "@/server/services/petcare-ai";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const maxDuration = 30;
 
-const SYSTEM_PROMPT = `Bạn là trợ lý sơ cứu thú y khẩn cấp AI được tích hợp trong ứng dụng PetCare Vietnam.
+const rateLimiter = createSlidingWindowRateLimiter({
+  limit: 10,
+  windowMs: 60_000,
+});
 
-NHIỆM VỤ: Cung cấp hướng dẫn sơ cứu NGAY LẬP TỨC cho chủ thú cưng khi họ cần trợ giúp khẩn cấp.
+function requestIdentity(request: NextRequest) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "anonymous"
+  );
+}
 
-QUY TẮC TUYỆT ĐỐI:
-1. Luôn nhắc người dùng ĐẾN PHÒNG KHÁM THÚ Y NGAY LẬP TỨC — đây là ưu tiên số 1.
-2. Cung cấp hướng dẫn sơ cứu cụ thể, rõ ràng, theo từng bước.
-3. KHÔNG chẩn đoán bệnh hoặc kê đơn thuốc.
-4. Sử dụng ngôn ngữ bình dân, dễ hiểu, không dùng thuật ngữ y khoa phức tạp.
-5. Luôn hỏi về loài (chó, mèo, thỏ...) nếu chưa biết, vì sơ cứu khác nhau theo loài.
-6. Nếu tình trạng CỰC KỲ nguy hiểm (ngưng thở, co giật, chảy máu nặng) — NGẮN GỌN và CHỈ DẪN NGAY.
+export async function POST(request: NextRequest) {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > 64_000) {
+    return NextResponse.json(
+      { error: "Request is too large" },
+      { status: 413 },
+    );
+  }
 
-ĐỊNH DẠNG ĐẦU RA:
-- Dùng **bold** cho các bước quan trọng
-- Dùng emoji để phân biệt mức độ khẩn cấp: 🚨 (cực khẩn), ⚠️ (cảnh báo), ✅ (an toàn)
-- Liệt kê theo số thứ tự rõ ràng
-- Kết thúc luôn nhắc đến phòng khám thú y
+  const rateLimit = rateLimiter.check(requestIdentity(request));
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait before trying again." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
+  }
 
-TUYÊN BỐ MIỄN TRỪ: Đây là hướng dẫn sơ cứu tạm thời, không thay thế chuyên môn bác sĩ thú y.`;
+  try {
+    const input = triageRequestSchema.parse(await request.json());
+    const clinicContext = input.location
+      ? await getClinicContext(input.location)
+      : buildClinicContext([]);
+    const languageInstruction =
+      input.locale === "vi"
+        ? "Reply in Vietnamese unless the user clearly asks for another language."
+        : "Reply in English unless the user clearly asks for another language.";
 
-export async function POST(req: NextRequest) {
-  const { message, history } = (await req.json()) as {
-    message: string;
-    history: Array<{ role: "user" | "assistant"; content: string }>;
-  };
+    const result = await streamText({
+      model: google(resolveAIModel(env.GOOGLE_GENERATIVE_AI_MODEL)),
+      system: `${PETCARE_SYSTEM_PROMPT}\n\n${languageInstruction}\n\n${clinicContext}`,
+      messages: [
+        ...input.history.map((message) => ({
+          role: message.role,
+          content: message.content,
+        })),
+        { role: "user" as const, content: input.message },
+      ],
+      temperature: 0.2,
+      // Gemini 3.x uses part of this budget for internal reasoning.
+      // Keep enough headroom so the visible safety guidance is not cut off.
+      maxTokens: 1_800,
+      abortSignal: request.signal,
+    });
+    console.log(result)
 
-  const result = await streamText({
-    model: google("gemini-1.5-flash"),
-    system: SYSTEM_PROMPT,
-    messages: [
-      ...history.slice(-6).map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-      { role: "user" as const, content: message },
-    ],
-    temperature: 0.3,
-    maxTokens: 800,
+    return result.toTextStreamResponse({
+      headers: {
+        "Cache-Control": "no-store",
+        "X-RateLimit-Remaining": String(rateLimit.remaining),
+      },
+    });
+  } catch (error) {
+    if (error instanceof ZodError || error instanceof SyntaxError) {
+      return NextResponse.json(
+        { error: "Invalid pet-care request" },
+        { status: 400 },
+      );
+    }
+
+    console.error("PetCare AI request failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return NextResponse.json(
+      { error: "PetCare AI is temporarily unavailable" },
+      { status: 503 },
+    );
+  }
+}
+
+async function getClinicContext(location: {
+  latitude: number;
+  longitude: number;
+}) {
+  const candidates = await db.clinic.findMany({
+    where: {
+      isVerified: true,
+      latitude: { not: null },
+      longitude: { not: null },
+    },
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      district: true,
+      city: true,
+      phone: true,
+      status: true,
+      is24h: true,
+      isVerified: true,
+      isExoticSpec: true,
+      specializations: true,
+      rating: true,
+      reviewCount: true,
+      latitude: true,
+      longitude: true,
+    },
+    take: 250,
   });
 
-  return result.toTextStreamResponse();
+  const nearbyClinics = discoverClinics(candidates, {
+    origin: location,
+    radiusKm: 100,
+    sort: "distance",
+    limit: 5,
+  });
+
+  return buildClinicContext(nearbyClinics);
 }

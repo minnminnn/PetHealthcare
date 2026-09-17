@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { ClinicStatus } from "@prisma/client";
+import { discoverClinics } from "@/server/services/clinic-discovery";
 
 export const emergencyRouter = createTRPCRouter({
   /**
@@ -16,53 +17,46 @@ export const emergencyRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { lat, lng, radiusKm } = input;
-      const radiusMeters = radiusKm * 1000;
+      const clinics = await ctx.db.clinic.findMany({
+        where: {
+          isVerified: true,
+          is24h: true,
+          status: { in: [ClinicStatus.EMERGENCY, ClinicStatus.AVAILABLE] },
+          latitude: { not: null },
+          longitude: { not: null },
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          address: true,
+          district: true,
+          city: true,
+          phone: true,
+          status: true,
+          isVerified: true,
+          is24h: true,
+          specializations: true,
+          rating: true,
+          reviewCount: true,
+          latitude: true,
+          longitude: true,
+          logoUrl: true,
+        },
+        take: 250,
+      });
 
-      const clinics = await ctx.db.$queryRawUnsafe<
-        Array<{
-          id: string;
-          name: string;
-          address: string;
-          phone: string;
-          status: ClinicStatus;
-          latitude: number;
-          longitude: number;
-          logoUrl: string | null;
-          distance_m: number;
-        }>
-      >(
-        `
-        SELECT *
-        FROM (
-          SELECT
-            id, name, address, phone, status,
-            latitude, longitude, logo_url AS "logoUrl",
-            6371000 * 2 * ASIN(SQRT(LEAST(1,
-              POWER(SIN(RADIANS(latitude - $1) / 2), 2) +
-              COS(RADIANS($1)) * COS(RADIANS(latitude)) *
-              POWER(SIN(RADIANS(longitude - $2) / 2), 2)
-            ))) AS distance_m
-          FROM clinics
-          WHERE latitude IS NOT NULL
-            AND longitude IS NOT NULL
-            AND is_24h = true
-            AND status IN ('EMERGENCY', 'AVAILABLE')
-        ) AS clinics_with_distance
-        WHERE distance_m <= $3
-        ORDER BY distance_m ASC
-        LIMIT 3
-        `,
-        lat,
-        lng,
-        radiusMeters,
-      );
-
-      return clinics.map((c) => ({
-        ...c,
-        distanceKm: Math.round((c.distance_m / 1000) * 10) / 10,
-        mapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${c.latitude},${c.longitude}`,
-        callUrl: `tel:${c.phone.replace(/\s/g, "")}`,
+      return discoverClinics(clinics, {
+        origin: { latitude: input.lat, longitude: input.lng },
+        radiusKm: input.radiusKm,
+        is24h: true,
+        statuses: [ClinicStatus.EMERGENCY, ClinicStatus.AVAILABLE],
+        sort: "distance",
+        limit: 3,
+      }).map((clinic) => ({
+        ...clinic,
+        callUrl: `tel:${clinic.phone.replace(/[^+\d]/g, "")}`,
+        mapsUrl: `/clinics?q=${encodeURIComponent(clinic.name)}`,
       }));
     }),
 
@@ -72,6 +66,7 @@ export const emergencyRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return ctx.db.clinic.findMany({
         where: {
+          isVerified: true,
           city: { contains: input.city, mode: "insensitive" },
           is24h: true,
           status: { in: [ClinicStatus.EMERGENCY, ClinicStatus.AVAILABLE] },
