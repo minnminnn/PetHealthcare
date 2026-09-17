@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
       maxTokens: 1_800,
       abortSignal: request.signal,
     });
-    console.log(result)
 
     return result.toTextStreamResponse({
       headers: {
