@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl, {
   type GeoJSONSource,
   type LngLatLike,
@@ -8,7 +8,6 @@ import mapboxgl, {
   type Marker,
 } from "mapbox-gl";
 import { Loader2, MapPin, TriangleAlert } from "lucide-react";
-import { api } from "@/trpc/react";
 import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 
 export interface MapViewportState {
@@ -19,29 +18,32 @@ export interface MapViewportState {
   pitch: number;
 }
 
-export interface MapClinic {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-}
-
-export interface MapSearchResult {
-  id: string;
-  name: string;
-  address: string;
+export interface MapPoint {
   latitude: number;
   longitude: number;
+}
+
+export interface MapSelectedClinic extends MapPoint {
+  id: string;
+  name: string;
+  address: string;
+}
+
+export interface MapSearchResult extends MapSelectedClinic {
   distanceMeters: number | null;
   categories: string[];
 }
 
 interface ClinicMapProps {
-  clinics: MapClinic[];
-  selectedId?: string;
+  center: MapPoint | null;
+  centerLabel: string;
+  selectedClinic: MapSelectedClinic | null;
+  nearbyClinics: MapSearchResult[];
+  focusedResultId?: string;
   locale: "vi" | "en";
-  onSelect: (id: string) => void;
+  isSearching: boolean;
+  searchFailed: boolean;
+  onNearbySelect: (id: string) => void;
   onViewportChange?: (viewport: MapViewportState) => void;
 }
 
@@ -55,10 +57,7 @@ interface DirectionsResponse {
 }
 
 interface GeolocateEvent {
-  coords: {
-    latitude: number;
-    longitude: number;
-  };
+  coords: { latitude: number; longitude: number };
 }
 
 const VIETNAM_CENTER: [number, number] = [108.2062, 16.0471];
@@ -68,13 +67,12 @@ const ROUTE_LAYER_ID = "clinic-route-line";
 const COPY = {
   vi: {
     selected: "Phòng khám đã chọn",
-    verified: "Phòng khám đã xác minh",
-    nearby: "Gợi ý lân cận từ Mapbox",
+    center: "Khu vực tìm kiếm",
+    nearby: "Phòng khám từ Mapbox",
     directions: "Chỉ đường",
     loadingMap: "Đang tải bản đồ…",
-    searching: "Đang tìm phòng khám lân cận…",
-    searchError:
-      "Không thể tải gợi ý lân cận. Các phòng khám đã xác minh vẫn hiển thị.",
+    searching: "Đang tìm phòng khám quanh khu vực này…",
+    searchError: "Không thể tải kết quả Mapbox lúc này. Hãy thử lại sau.",
     mapError: "Không thể tải bản đồ Mapbox lúc này.",
     tokenError: "Thiếu NEXT_PUBLIC_MAPBOX_TOKEN để hiển thị bản đồ.",
     directionsError:
@@ -82,13 +80,12 @@ const COPY = {
   },
   en: {
     selected: "Selected clinic",
-    verified: "Verified clinic",
-    nearby: "Nearby Mapbox suggestion",
+    center: "Search area",
+    nearby: "Clinic from Mapbox",
     directions: "Get directions",
     loadingMap: "Loading map…",
-    searching: "Finding nearby veterinary clinics…",
-    searchError:
-      "Nearby suggestions are unavailable. Verified clinics are still shown.",
+    searching: "Finding clinics around this area…",
+    searchError: "Mapbox results are unavailable right now. Please try again.",
     mapError: "The Mapbox map could not be loaded right now.",
     tokenError: "Add NEXT_PUBLIC_MAPBOX_TOKEN to display the map.",
     directionsError:
@@ -96,25 +93,24 @@ const COPY = {
   },
 } as const;
 
-function hasCoordinates(
-  clinic: MapClinic,
-): clinic is MapClinic & { latitude: number; longitude: number } {
-  return clinic.latitude !== null && clinic.longitude !== null;
-}
-
 function createMarkerElement(
-  kind: "selected" | "verified" | "nearby",
+  kind: "selected" | "center" | "nearby" | "focused",
   label: string,
+  markerNumber?: number,
 ) {
   const element = document.createElement("button");
   element.type = "button";
   element.className = `clinic-map-marker clinic-map-marker--${kind}`;
   element.setAttribute("aria-label", label);
   element.title = label;
-
   const icon = document.createElement("span");
   icon.setAttribute("aria-hidden", "true");
-  icon.textContent = kind === "selected" ? "✚" : "•";
+  icon.textContent =
+    kind === "selected"
+      ? "✚"
+      : kind === "center"
+        ? "⌖"
+        : String(markerNumber ?? "");
   element.append(icon);
   return element;
 }
@@ -134,25 +130,20 @@ function createPopupContent({
 }) {
   const root = document.createElement("div");
   root.className = "clinic-map-popup-content";
-
   const label = document.createElement("p");
   label.className = "clinic-map-popup-eyebrow";
   label.textContent = eyebrow;
-
   const title = document.createElement("h3");
   title.className = "clinic-map-popup-title";
   title.textContent = name;
-
   const body = document.createElement("p");
   body.className = "clinic-map-popup-address";
   body.textContent = address;
-
   const button = document.createElement("button");
   button.type = "button";
   button.className = "clinic-map-popup-directions";
   button.textContent = directionsLabel;
   button.addEventListener("click", onDirections);
-
   root.append(label, title, body, button);
   return root;
 }
@@ -164,10 +155,15 @@ function removeRoute(map: MapboxMap) {
 }
 
 export function ClinicMap({
-  clinics,
-  selectedId,
+  center,
+  centerLabel,
+  selectedClinic,
+  nearbyClinics,
+  focusedResultId,
   locale,
-  onSelect,
+  isSearching,
+  searchFailed,
+  onNearbySelect,
   onViewportChange,
 }: ClinicMapProps) {
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -176,50 +172,27 @@ export function ClinicMap({
   const mapRef = useRef<MapboxMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const onViewportChangeRef = useRef(onViewportChange);
-  const userLocationRef = useRef<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const userLocationRef = useRef<MapPoint | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState("");
   const [directionsError, setDirectionsError] = useState("");
-
-  const mappedClinics = useMemo(
-    () => clinics.filter(hasCoordinates),
-    [clinics],
-  );
-  const selectedDatabaseClinic =
-    mappedClinics.find((clinic) => clinic.id === selectedId) ??
-    mappedClinics[0];
   onViewportChangeRef.current = onViewportChange;
-
-  const mapDataQuery = api.clinics.mapData.useQuery(
-    { clinicId: selectedId ?? "", locale, radiusKm: 8 },
-    { enabled: Boolean(selectedId), retry: false, staleTime: 0, gcTime: 0 },
-  );
-
-  const selectedClinic = mapDataQuery.data?.selected ?? selectedDatabaseClinic;
-  const nearbyClinics = useMemo(
-    () => mapDataQuery.data?.nearby ?? [],
-    [mapDataQuery.data?.nearby],
-  );
 
   useEffect(() => {
     if (!token || !mapContainerRef.current || mapRef.current) return;
-
-    const initialCenter: LngLatLike = selectedDatabaseClinic
-      ? [selectedDatabaseClinic.longitude, selectedDatabaseClinic.latitude]
+    const initialPoint = selectedClinic ?? center;
+    const initialCenter: LngLatLike = initialPoint
+      ? [initialPoint.longitude, initialPoint.latitude]
       : VIETNAM_CENTER;
     const map = new mapboxgl.Map({
       accessToken: token,
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/standard",
       center: initialCenter,
-      zoom: selectedDatabaseClinic ? 13 : 5,
+      zoom: initialPoint ? 13 : 5,
       attributionControl: true,
     });
     mapRef.current = map;
-
     map.addControl(
       new mapboxgl.NavigationControl({ visualizePitch: true }),
       "top-right",
@@ -243,10 +216,10 @@ export function ClinicMap({
 
     const reportViewport = () => {
       if (!onViewportChangeRef.current) return;
-      const center = map.getCenter();
+      const mapCenter = map.getCenter();
       onViewportChangeRef.current({
-        longitude: center.lng,
-        latitude: center.lat,
+        longitude: mapCenter.lng,
+        latitude: mapCenter.lat,
         zoom: map.getZoom(),
         bearing: map.getBearing(),
         pitch: map.getPitch(),
@@ -261,47 +234,59 @@ export function ClinicMap({
       console.error("Mapbox GL map error", event.error);
       setMapError(copy.mapError);
     });
-
     return () => {
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       map.remove();
       mapRef.current = null;
     };
-    // The map owns an imperative WebGL lifecycle and is initialized once per token.
-    // Clinic selection changes are handled by the flyTo effect below.
+    // The WebGL map is initialized once; data changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || !selectedClinic) return;
-
+    const focusPoint = selectedClinic ?? center;
+    if (!map || !mapReady || !focusPoint) return;
     setDirectionsError("");
     removeRoute(map);
     map.flyTo({
-      center: [selectedClinic.longitude, selectedClinic.latitude],
+      center: [focusPoint.longitude, focusPoint.latitude],
       zoom: 14,
-      duration: 1100,
+      duration: 900,
       essential: false,
     });
-  }, [mapReady, selectedClinic]);
+  }, [center, mapReady, selectedClinic]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const focused = nearbyClinics.find(
+      (clinic) => clinic.id === focusedResultId,
+    );
+    if (!map || !mapReady || !focused) return;
+    map.flyTo({
+      center: [focused.longitude, focused.latitude],
+      zoom: 15,
+      duration: 700,
+      essential: false,
+    });
+  }, [focusedResultId, mapReady, nearbyClinics]);
 
   const requestDirections = useCallback(
-    async (destination: { latitude: number; longitude: number }) => {
+    async (destination: MapPoint) => {
       const map = mapRef.current;
       if (!map || !token) return;
-
       try {
         setDirectionsError("");
-        const origin: { latitude: number; longitude: number } =
-          userLocationRef.current ??
-          (await getCurrentLocation().then(({ lat, lng }) => ({
-            latitude: lat,
-            longitude: lng,
-          })));
+        let origin = userLocationRef.current;
+        if (!origin) {
+          const currentLocation = await getCurrentLocation();
+          origin = {
+            latitude: currentLocation.lat,
+            longitude: currentLocation.lng,
+          };
+        }
         userLocationRef.current = origin;
-
         const coordinates = `${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}`;
         const url = new URL(
           `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}`,
@@ -310,7 +295,6 @@ export function ClinicMap({
         url.searchParams.set("geometries", "geojson");
         url.searchParams.set("overview", "full");
         url.searchParams.set("steps", "false");
-
         const response = await fetch(url, {
           headers: { Accept: "application/json" },
         });
@@ -320,7 +304,6 @@ export function ClinicMap({
         const routeCoordinates = payload.routes?.[0]?.geometry?.coordinates;
         if (!routeCoordinates?.length)
           throw new Error("Directions returned no route");
-
         const route = {
           type: "Feature" as const,
           properties: {},
@@ -347,7 +330,6 @@ export function ClinicMap({
             },
           });
         }
-
         const bounds = routeCoordinates.reduce(
           (currentBounds, coordinate) => currentBounds.extend(coordinate),
           new mapboxgl.LngLatBounds(routeCoordinates[0], routeCoordinates[0]),
@@ -368,7 +350,6 @@ export function ClinicMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
-
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
@@ -379,27 +360,27 @@ export function ClinicMap({
       latitude,
       longitude,
       kind,
+      markerNumber,
       onClick,
-    }: {
-      id: string;
-      name: string;
-      address: string;
-      latitude: number;
-      longitude: number;
-      kind: "selected" | "verified" | "nearby";
+    }: MapSelectedClinic & {
+      kind: "selected" | "center" | "nearby" | "focused";
+      markerNumber?: number;
       onClick?: () => void;
     }) => {
       const eyebrow =
         kind === "selected"
           ? copy.selected
-          : kind === "nearby"
-            ? copy.nearby
-            : copy.verified;
-      const element = createMarkerElement(kind, `${eyebrow}: ${name}`);
+          : kind === "center"
+            ? copy.center
+            : copy.nearby;
+      const element = createMarkerElement(
+        kind,
+        `${eyebrow}: ${name}`,
+        markerNumber,
+      );
       if (onClick) element.addEventListener("click", onClick);
-
       const popup = new mapboxgl.Popup({
-        offset: kind === "selected" ? 28 : 22,
+        offset: kind === "selected" || kind === "center" ? 28 : 22,
         closeButton: true,
         className: "petcare-map-popup",
       }).setDOMContent(
@@ -419,24 +400,23 @@ export function ClinicMap({
       markersRef.current.push(marker);
     };
 
-    for (const clinic of mappedClinics) {
-      if (clinic.id === selectedClinic?.id) continue;
+    nearbyClinics.forEach((clinic, index) => {
       addMarker({
         ...clinic,
-        kind: "verified",
-        onClick: () => onSelect(clinic.id),
+        kind: clinic.id === focusedResultId ? "focused" : "nearby",
+        markerNumber: index + 1,
+        onClick: () => onNearbySelect(clinic.id),
       });
-    }
-
-    for (const clinic of nearbyClinics) {
-      addMarker({ ...clinic, kind: "nearby" });
-    }
-
+    });
     if (selectedClinic) {
+      addMarker({ ...selectedClinic, kind: "selected" });
+    } else if (center) {
       addMarker({
-        ...selectedClinic,
-        kind: "selected",
-        onClick: () => onSelect(selectedClinic.id),
+        id: "search-center",
+        name: centerLabel,
+        address: copy.center,
+        ...center,
+        kind: "center",
       });
     }
 
@@ -445,14 +425,16 @@ export function ClinicMap({
       markersRef.current = [];
     };
   }, [
+    center,
+    centerLabel,
+    copy.center,
     copy.directions,
     copy.nearby,
     copy.selected,
-    copy.verified,
+    focusedResultId,
     mapReady,
-    mappedClinics,
     nearbyClinics,
-    onSelect,
+    onNearbySelect,
     requestDirections,
     selectedClinic,
   ]);
@@ -468,10 +450,6 @@ export function ClinicMap({
     );
   }
 
-  const searchFailed = Boolean(
-    mapDataQuery.error || mapDataQuery.data?.warning,
-  );
-
   return (
     <div className="relative min-h-[23rem] w-full bg-[#20211f]">
       <div
@@ -479,7 +457,6 @@ export function ClinicMap({
         className="absolute inset-0"
         aria-label="Clinic map"
       />
-
       {!mapReady && !mapError && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-[#20211f] text-sm text-[#d6d7d0]">
           <span className="inline-flex items-center gap-2">
@@ -488,23 +465,20 @@ export function ClinicMap({
           </span>
         </div>
       )}
-
-      {mapDataQuery.isFetching && mapReady && (
+      {isSearching && mapReady && (
         <div className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#20211f]/90 px-3 py-2 text-xs font-semibold text-[#f1f1ed] shadow-lg backdrop-blur">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-[#ef7569]" />
           {copy.searching}
         </div>
       )}
-
       {(mapError || searchFailed || directionsError) && (
         <div className="absolute bottom-3 left-3 right-3 z-10 flex items-start gap-2 rounded-xl border border-[#ef7569]/30 bg-[#241b19]/95 px-3 py-2.5 text-xs leading-5 text-[#f3c0ba] shadow-lg backdrop-blur">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-[#ef7569]" />
           <span>{mapError || directionsError || copy.searchError}</span>
         </div>
       )}
-
       {mapReady &&
-        !mapDataQuery.isFetching &&
+        !isSearching &&
         !searchFailed &&
         nearbyClinics.length > 0 && (
           <div className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#20211f]/90 px-3 py-2 text-[11px] font-semibold text-[#e7e7e2] shadow-lg backdrop-blur">

@@ -204,25 +204,46 @@ export const clinicsRouter = createTRPCRouter({
   /** Resolve one selected clinic and temporary nearby Mapbox POI suggestions. */
   mapData: publicProcedure
     .input(
-      z.object({
-        clinicId: z.string().min(1),
-        locale: z.enum(["vi", "en"]).default("vi"),
-        radiusKm: z.number().positive().max(25).default(8),
-      }),
+      z
+        .object({
+          clinicId: z.string().min(1).optional(),
+          lat: z.number().min(-90).max(90).optional(),
+          lng: z.number().min(-180).max(180).optional(),
+          locale: z.enum(["vi", "en"]).default("vi"),
+          radiusKm: z.number().positive().max(25).default(8),
+        })
+        .refine(
+          (value) =>
+            Boolean(value.clinicId) ||
+            (value.lat !== undefined && value.lng !== undefined),
+          { message: "Choose a clinic or provide a search location" },
+        )
+        .refine(
+          (value) =>
+            (value.lat === undefined && value.lng === undefined) ||
+            (value.lat !== undefined && value.lng !== undefined),
+          { message: "Latitude and longitude must be provided together" },
+        ),
     )
     .query(async ({ ctx, input }) => {
-      const clinic = await ctx.db.clinic.findFirst({
-        where: { id: input.clinicId, isVerified: true },
-        select: {
-          id: true,
-          name: true,
-          address: true,
-          city: true,
-          latitude: true,
-          longitude: true,
-        },
-      });
-      if (!clinic) {
+      const clinic = input.clinicId
+        ? await ctx.db.clinic.findFirst({
+            where: {
+              id: input.clinicId,
+              isVerified: true,
+              NOT: { name: { startsWith: "[DEMO]" } },
+            },
+            select: {
+              id: true,
+              name: true,
+              address: true,
+              city: true,
+              latitude: true,
+              longitude: true,
+            },
+          })
+        : null;
+      if (input.clinicId && !clinic) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Clinic not found" });
       }
 
@@ -235,33 +256,43 @@ export const clinicsRouter = createTRPCRouter({
         });
       }
 
+      const requestedCenter =
+        input.lat !== undefined && input.lng !== undefined
+          ? { latitude: input.lat, longitude: input.lng }
+          : null;
       const databaseCenter =
-        clinic.latitude !== null && clinic.longitude !== null
+        clinic?.latitude !== null &&
+        clinic?.latitude !== undefined &&
+        clinic.longitude !== null
           ? { latitude: clinic.latitude, longitude: clinic.longitude }
           : null;
       let exactMatch: Awaited<ReturnType<typeof searchClinicPoi>> = null;
       let warning:
         "EXACT_SEARCH_UNAVAILABLE" | "NEARBY_SEARCH_UNAVAILABLE" | null = null;
 
-      try {
-        exactMatch = await searchClinicPoi({
-          name: clinic.name,
-          address: [clinic.address, clinic.city].filter(Boolean).join(", "),
-          locale: input.locale,
-          proximity: databaseCenter ?? undefined,
-          accessToken,
-        });
-      } catch (cause) {
-        if (!databaseCenter) warning = "EXACT_SEARCH_UNAVAILABLE";
-        console.error("Mapbox exact clinic search failed", cause);
+      if (clinic && !requestedCenter) {
+        try {
+          exactMatch = await searchClinicPoi({
+            name: clinic.name,
+            address: [clinic.address, clinic.city].filter(Boolean).join(", "),
+            locale: input.locale,
+            proximity: databaseCenter ?? undefined,
+            accessToken,
+          });
+        } catch (cause) {
+          if (!databaseCenter) warning = "EXACT_SEARCH_UNAVAILABLE";
+          console.error("Mapbox exact clinic search failed", cause);
+        }
       }
 
       const center = selectClinicMapCenter({
+        requestedCenter,
         databaseCenter,
         searchResult: exactMatch,
       });
       if (!center) {
         return {
+          center: null,
           selected: null,
           nearby: [],
           warning: warning ?? "EXACT_SEARCH_UNAVAILABLE",
@@ -283,14 +314,17 @@ export const clinicsRouter = createTRPCRouter({
       }
 
       return {
-        selected: {
-          id: clinic.id,
-          name: clinic.name,
-          address: clinic.address,
-          latitude: center.latitude,
-          longitude: center.longitude,
-          source: center.source,
-        },
+        center,
+        selected: clinic
+          ? {
+              id: clinic.id,
+              name: clinic.name,
+              address: clinic.address,
+              latitude: center.latitude,
+              longitude: center.longitude,
+              source: center.source,
+            }
+          : null,
         nearby: nearby.filter((result) => result.id !== exactMatch?.id),
         warning,
       };

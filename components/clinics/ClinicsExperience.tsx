@@ -1,160 +1,98 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useReducedMotion } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import {
   ArrowRight,
-  Check,
-  ChevronDown,
-  Clock3,
-  MapPin,
-  Phone,
-  Search,
-  ShieldCheck,
-  SlidersHorizontal,
-  Star,
   Loader2,
+  LocateFixed,
+  MapPin,
   Navigation,
+  Search,
+  X,
 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import {
-  ClinicStatus as PrismaClinicStatus,
-  Species as PrismaSpecies,
-} from "@prisma/client";
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+gsap.registerPlugin(useGSAP);
 
 type Locale = "vi" | "en";
-type Species = "all" | "dog" | "cat" | "bird" | "reptile" | "exotic";
-type ClinicStatus = "available" | "emergency" | "busy" | "closed";
 
 const ClinicMap = dynamic(
   () => import("./ClinicMap").then((module) => module.ClinicMap),
   { ssr: false },
 );
 
-const SPECIES_VALUE: Partial<Record<Species, PrismaSpecies>> = {
-  dog: PrismaSpecies.DOG,
-  cat: PrismaSpecies.CAT,
-  bird: PrismaSpecies.BIRD,
-  reptile: PrismaSpecies.REPTILE,
-  exotic: PrismaSpecies.OTHER,
-};
-
-const STATUS_VALUE: Record<ClinicStatus, PrismaClinicStatus> = {
-  available: PrismaClinicStatus.AVAILABLE,
-  emergency: PrismaClinicStatus.EMERGENCY,
-  busy: PrismaClinicStatus.BUSY,
-  closed: PrismaClinicStatus.CLOSED,
-};
-
-const UI_STATUS: Record<PrismaClinicStatus, ClinicStatus> = {
-  AVAILABLE: "available",
-  EMERGENCY: "emergency",
-  BUSY: "busy",
-  CLOSED: "closed",
-};
-
 const COPY = {
   vi: {
-    breadcrumbHome: "Trang chủ",
-    breadcrumbCurrent: "Phòng khám",
     eyebrow: "Phòng khám quanh bạn",
     title: "Tìm nơi chăm sóc phù hợp, gần bạn.",
     description:
-      "So sánh chuyên môn, giờ mở cửa và đánh giá trước khi đặt lịch.",
-    searchPlaceholder: "Tên phòng khám, khu vực hoặc dịch vụ",
-    searchLabel: "Tìm kiếm phòng khám",
-    locationHint: "Chọn một địa điểm để tìm phòng khám gần đó",
+      "Chọn một khu vực để xem các phòng khám thú y thật sự được Mapbox tìm thấy gần đó.",
+    searchLabel: "Tìm theo khu vực",
+    searchPlaceholder: "Nhập thành phố, quận hoặc khu phố",
+    locationHint: "Chọn một khu vực để tìm phòng khám gần đó",
+    typeMore: "Nhập ít nhất 3 ký tự để bắt đầu tìm kiếm.",
+    noPlaces: "Không tìm thấy khu vực phù hợp. Hãy thử tên gần đó.",
     useLocation: "Dùng vị trí hiện tại",
-    loading: "Đang tìm phòng khám đã xác minh…",
-    filters: "Bộ lọc",
-    species: "Loài thú cưng",
-    status: "Trạng thái",
-    sort: "Sắp xếp",
-    sortDistance: "Gần nhất",
-    sortRating: "Đánh giá cao",
-    allStatuses: "Tất cả trạng thái",
-    result: "phòng khám phù hợp",
-    verified: "Đã xác minh",
-    reviews: "đánh giá",
-    details: "Xem chi tiết",
-    call: "Gọi phòng khám",
-    openAllDay: "Mở cửa 24/7",
-    mapTitle: "Vị trí phòng khám",
+    clearSearch: "Xóa tìm kiếm",
+    results: "phòng khám do Mapbox tìm thấy",
+    searching: "Đang tìm phòng khám quanh khu vực này…",
+    source: "Kết quả trực tiếp từ Mapbox",
+    distance: "cách tâm tìm kiếm",
+    showOnMap: "Xem trên bản đồ",
+    emptyTitle: "Chưa tìm thấy phòng khám quanh khu vực này",
+    emptyBody:
+      "Thử chọn một khu vực khác hoặc mở rộng tìm kiếm bằng vị trí hiện tại.",
+    mapTitle: "Bản đồ kết quả",
     mapDescription:
-      "Chọn một phòng khám trong danh sách để xem vị trí và thông tin nhanh.",
-    mapPending:
-      "Chỉ các phòng khám có tọa độ đã xác minh mới xuất hiện trên bản đồ.",
-    selected: "Đang chọn",
-    emptyTitle: "Chưa tìm thấy phòng khám phù hợp",
-    emptyBody: "Thử đổi từ khóa hoặc chọn lại bộ lọc.",
-    clear: "Xóa bộ lọc",
+      "Số trên bản đồ khớp với số trong danh sách. Không còn lớp chấm đen từ dữ liệu mẫu.",
+    searchCenter: "Tâm tìm kiếm",
+    nearbyClinic: "Phòng khám gần đó",
+    selectLocation: "Chọn một khu vực ở thanh tìm kiếm để bắt đầu.",
   },
   en: {
-    breadcrumbHome: "Home",
-    breadcrumbCurrent: "Clinics",
     eyebrow: "Care near you",
     title: "Find the right care, close to home.",
     description:
-      "Compare expertise, opening hours, and community feedback before booking.",
-    searchPlaceholder: "Clinic name, area, or service",
-    searchLabel: "Search clinics",
-    locationHint: "Choose a place to find clinics nearby",
+      "Choose an area to see real veterinary clinics returned by Mapbox nearby.",
+    searchLabel: "Search by area",
+    searchPlaceholder: "Enter a city, district, or neighborhood",
+    locationHint: "Choose an area to find nearby clinics",
+    typeMore: "Enter at least 3 characters to start searching.",
+    noPlaces: "No matching areas found. Try a nearby place name.",
     useLocation: "Use current location",
-    loading: "Finding verified clinics…",
-    filters: "Filters",
-    species: "Pet type",
-    status: "Status",
-    sort: "Sort",
-    sortDistance: "Nearest",
-    sortRating: "Top rated",
-    allStatuses: "All statuses",
-    result: "matching clinics",
-    verified: "Verified",
-    reviews: "reviews",
-    details: "View details",
-    call: "Call clinic",
-    openAllDay: "Open 24/7",
-    mapTitle: "Clinic locations",
+    clearSearch: "Clear search",
+    results: "clinics found by Mapbox",
+    searching: "Finding clinics around this area…",
+    source: "Live result from Mapbox",
+    distance: "from the search center",
+    showOnMap: "Show on map",
+    emptyTitle: "No clinics found around this area",
+    emptyBody: "Choose another area or try your current location.",
+    mapTitle: "Result map",
     mapDescription:
-      "Select a clinic from the list to see its location and key details.",
-    mapPending: "Only clinics with verified coordinates appear on the map.",
-    selected: "Selected",
-    emptyTitle: "No matching clinics yet",
-    emptyBody: "Try another search term or reset the filters.",
-    clear: "Clear filters",
+      "Map numbers match the list. The old black demo-marker layer has been removed.",
+    searchCenter: "Search center",
+    nearbyClinic: "Nearby clinic",
+    selectLocation: "Choose an area in the search field to begin.",
   },
 } as const;
 
-const SPECIES: Array<{ id: Species; label: Record<Locale, string> }> = [
-  { id: "all", label: { vi: "Tất cả", en: "All" } },
-  { id: "dog", label: { vi: "Chó", en: "Dogs" } },
-  { id: "cat", label: { vi: "Mèo", en: "Cats" } },
-  { id: "bird", label: { vi: "Chim", en: "Birds" } },
-  { id: "reptile", label: { vi: "Bò sát", en: "Reptiles" } },
-  { id: "exotic", label: { vi: "Thú ngoại lai", en: "Exotic pets" } },
-];
-
-const STATUS: Record<ClinicStatus, Record<Locale, string>> = {
-  available: { vi: "Đang mở cửa", en: "Open now" },
-  emergency: { vi: "Trực cấp cứu", en: "Emergency care" },
-  busy: { vi: "Đang đông", en: "Currently busy" },
-  closed: { vi: "Đã đóng cửa", en: "Closed" },
-};
-
-function formatReviews(value: number, locale: Locale) {
-  return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(
-    value,
-  );
+function formatDistance(meters: number | null, locale: Locale) {
+  if (meters === null) return null;
+  if (meters < 1000) {
+    return `${Math.round(meters / 10) * 10} m`;
+  }
+  return `${new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", {
+    maximumFractionDigits: 1,
+  }).format(meters / 1000)} km`;
 }
 
 export function ClinicsExperience({ locale }: { locale: Locale }) {
@@ -162,50 +100,44 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
   const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
   const copy = COPY[locale];
+  const initialLat = Number(searchParams.get("lat"));
+  const initialLng = Number(searchParams.get("lng"));
+  const hasInitialOrigin =
+    searchParams.has("lat") &&
+    Number.isFinite(initialLat) &&
+    Number.isFinite(initialLng);
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
-  const [species, setSpecies] = useState<Species>(() => {
-    const value = searchParams.get("species")?.toLocaleLowerCase();
-    return value && ["dog", "cat", "bird", "reptile", "exotic"].includes(value)
-      ? (value as Species)
-      : "all";
-  });
-  const [status, setStatus] = useState<ClinicStatus | "all">("all");
-  const [sort, setSort] = useState<"distance" | "rating">("distance");
-  const [selectedId, setSelectedId] = useState("");
-  const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
-  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
-    () => {
-      const lat = Number(searchParams.get("lat"));
-      const lng = Number(searchParams.get("lng"));
-      return Number.isFinite(lat) &&
-        Number.isFinite(lng) &&
-        searchParams.has("lat")
-        ? { lat, lng }
-        : null;
-    },
+  const [selectedPlace, setSelectedPlace] = useState<string | null>(() =>
+    hasInitialOrigin ? (searchParams.get("q") ?? copy.searchCenter) : null,
   );
+  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
+    () => (hasInitialOrigin ? { lat: initialLat, lng: initialLng } : null),
+  );
+  const [selectedClinicId, setSelectedClinicId] = useState("");
+  const [focusedResultId, setFocusedResultId] = useState<string>();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
   const debouncedQuery = useDebounce(query, 300);
 
-  const discoveryInput = useMemo(
-    () => ({
-      query: selectedPlace ? undefined : debouncedQuery.trim() || undefined,
-      species: species === "all" ? undefined : SPECIES_VALUE[species],
-      status: status === "all" ? undefined : STATUS_VALUE[status],
-      sort,
-      lat: origin?.lat,
-      lng: origin?.lng,
-      radiusKm: 50,
-      limit: 30,
-    }),
-    [debouncedQuery, origin, selectedPlace, sort, species, status],
+  const clinicsQuery = api.clinics.discover.useQuery(
+    { sort: "rating", limit: 30, radiusKm: 50 },
+    { staleTime: 30_000 },
   );
+  const databaseClinics = clinicsQuery.data ?? [];
+  const selectedDatabaseClinic =
+    databaseClinics.find((clinic) => clinic.id === selectedClinicId) ??
+    databaseClinics[0];
 
-  const clinicsQuery = api.clinics.discover.useQuery(discoveryInput, {
-    staleTime: 30_000,
-  });
+  useEffect(() => {
+    if (
+      selectedDatabaseClinic &&
+      selectedDatabaseClinic.id !== selectedClinicId
+    ) {
+      setSelectedClinicId(selectedDatabaseClinic.id);
+    }
+  }, [selectedClinicId, selectedDatabaseClinic]);
+
   const locationQuery = api.clinics.locationSuggestions.useQuery(
     {
       query: debouncedQuery,
@@ -222,67 +154,46 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
     },
   );
 
-  const filteredClinics = clinicsQuery.data ?? [];
-  const selectedClinic =
-    filteredClinics.find((clinic) => clinic.id === selectedId) ??
-    filteredClinics[0];
+  const canSearchMap = Boolean(origin || selectedDatabaseClinic);
+  const mapInput = origin
+    ? { lat: origin.lat, lng: origin.lng, locale, radiusKm: 8 }
+    : {
+        clinicId: selectedDatabaseClinic?.id ?? "pending-clinic",
+        locale,
+        radiusKm: 8,
+      };
+  const mapDataQuery = api.clinics.mapData.useQuery(mapInput, {
+    enabled: canSearchMap,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const nearbyClinics = useMemo(
+    () => mapDataQuery.data?.nearby ?? [],
+    [mapDataQuery.data?.nearby],
+  );
 
   useEffect(() => {
-    if (selectedClinic && selectedClinic.id !== selectedId) {
-      setSelectedId(selectedClinic.id);
-    }
-  }, [selectedClinic, selectedId]);
+    setFocusedResultId(undefined);
+  }, [origin?.lat, origin?.lng, selectedDatabaseClinic?.id]);
 
   useGSAP(
     () => {
       if (reduceMotion) return;
-
       gsap.fromTo(
         "[data-clinic-hero] > *",
-        { opacity: 0, y: 22 },
-        { opacity: 1, y: 0, duration: 0.75, stagger: 0.08, ease: "power3.out" },
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.07, ease: "power3.out" },
       );
-
-      gsap.utils.toArray<HTMLElement>("[data-clinic-row]").forEach((row) => {
-        const image = row.querySelector<HTMLElement>("[data-clinic-image]");
-
-        gsap.from(row, {
-          opacity: 0,
-          y: 28,
-          duration: 0.7,
-          ease: "power3.out",
-          scrollTrigger: { trigger: row, start: "top 88%", once: true },
-        });
-
-        if (image) {
-          gsap.fromTo(
-            image,
-            { scale: 0.88, opacity: 0.55 },
-            {
-              scale: 1,
-              opacity: 1,
-              ease: "none",
-              scrollTrigger: {
-                trigger: row,
-                start: "top 90%",
-                end: "bottom 30%",
-                scrub: 0.7,
-              },
-            },
-          );
-        }
-      });
     },
     { scope: root, dependencies: [reduceMotion], revertOnUpdate: true },
   );
 
-  const clearFilters = () => {
+  const clearSearch = () => {
     setQuery("");
     setSelectedPlace(null);
     setOrigin(null);
-    setSpecies("all");
-    setStatus("all");
-    setSort("distance");
+    setLocationError("");
+    setFocusedResultId(undefined);
   };
 
   const useCurrentLocation = async () => {
@@ -290,16 +201,24 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
     setLocationError("");
     setIsLocating(true);
     try {
-      setOrigin(await getCurrentLocation());
+      const nextOrigin = await getCurrentLocation();
+      setOrigin(nextOrigin);
       setSelectedPlace(copy.useLocation);
       setQuery(copy.useLocation);
-      setSort("distance");
+      setIsSearchFocused(false);
     } catch (error) {
       setLocationError(getLocationErrorMessage(error, locale));
     } finally {
       setIsLocating(false);
     }
   };
+
+  const handleResultSelect = useCallback((id: string) => {
+    setFocusedResultId(id);
+  }, []);
+
+  const showSuggestionPanel =
+    isSearchFocused && !selectedPlace && query.trim().length > 0;
 
   return (
     <main
@@ -312,22 +231,6 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
             data-clinic-hero
             className="flex flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12"
           >
-            {/* <nav
-              aria-label="Breadcrumb"
-              className="flex items-center gap-2 text-sm text-[#676964] dark:text-[#b7b8b2]"
-            >
-              <Link
-                href="/"
-                className="transition-colors hover:text-[#b9473e] dark:hover:text-[#ef7569]"
-              >
-                {copy.breadcrumbHome}
-              </Link>
-              <span aria-hidden="true">/</span>
-              <span className="font-semibold text-[#20211f] dark:text-[#f1f1ed]">
-                {copy.breadcrumbCurrent}
-              </span>
-            </nav> */}
-
             <div className="my-16 lg:my-10">
               <p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-[#b9473e] dark:text-[#ef7569]">
                 {copy.eyebrow}
@@ -341,81 +244,114 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
             </div>
 
             <div className="relative">
-              <label className="group flex min-h-14 items-center gap-3 rounded-xl border border-[#babbb4] bg-[#f3f3f0] px-4 transition-colors focus-within:border-[#b9473e] focus-within:ring-4 focus-within:ring-[#d85f53]/15 dark:border-white/15 dark:bg-[#171816] dark:focus-within:border-[#ef7569]">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-[0.13em] text-[#676964] dark:text-[#b7b8b2]">
+                {copy.searchLabel}
+              </label>
+              <div className="flex min-h-16 items-center rounded-2xl border border-[#b0b1aa] bg-[#f8f8f5] shadow-[0_10px_30px_rgba(32,33,31,.07)] transition focus-within:border-[#b9473e] focus-within:ring-4 focus-within:ring-[#d85f53]/15 dark:border-white/15 dark:bg-[#171816] dark:shadow-none dark:focus-within:border-[#ef7569]">
                 <Search
-                  className="h-5 w-5 shrink-0 text-[#74766f] dark:text-[#92948d]"
+                  className="ml-5 h-5 w-5 shrink-0 text-[#74766f] dark:text-[#92948d]"
                   strokeWidth={1.8}
                   aria-hidden="true"
                 />
-                <span className="sr-only">{copy.searchLabel}</span>
                 <input
-                  type="search"
+                  type="text"
+                  autoComplete="off"
+                  spellCheck={false}
                   value={query}
                   onChange={(event) => {
                     setQuery(event.target.value);
                     setSelectedPlace(null);
                     setOrigin(null);
+                    setLocationError("");
                   }}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() =>
                     window.setTimeout(() => setIsSearchFocused(false), 150)
                   }
                   placeholder={copy.searchPlaceholder}
-                  className="w-full bg-transparent text-sm text-[#20211f] outline-none placeholder:text-[#74766f] dark:text-[#f1f1ed] dark:placeholder:text-[#92948d]"
+                  className="min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 py-4 text-base text-[#20211f] outline-none ring-0 placeholder:text-[#74766f] focus:outline-none focus:ring-0 dark:text-[#f1f1ed] dark:placeholder:text-[#92948d]"
                 />
+                {query && (
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={clearSearch}
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#676964] transition hover:bg-[#e5e5df] hover:text-[#20211f] dark:text-[#b7b8b2] dark:hover:bg-white/10 dark:hover:text-white"
+                    aria-label={copy.clearSearch}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+                <div className="mx-2 h-8 w-px bg-[#d1d2cc] dark:bg-white/10" />
                 <button
                   type="button"
                   onClick={useCurrentLocation}
                   disabled={isLocating}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#676964] transition hover:bg-[#deded8] hover:text-[#b9473e] disabled:opacity-60 dark:text-[#b7b8b2] dark:hover:bg-white/10 dark:hover:text-[#ef7569]"
+                  className="mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-xl text-[#b9473e] transition hover:bg-[#eee4e1] disabled:opacity-60 dark:text-[#ef7569] dark:hover:bg-[#ef7569]/10"
                   aria-label={copy.useLocation}
                   title={copy.useLocation}
                 >
                   {isLocating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
-                    <Navigation className="h-4 w-4" />
+                    <LocateFixed className="h-5 w-5" />
                   )}
                 </button>
-              </label>
+              </div>
+
               {locationError && (
                 <p className="mt-2 text-xs font-medium text-[#b9473e] dark:text-[#ef7569]">
                   {locationError}
                 </p>
               )}
-              {isSearchFocused && (locationQuery.data?.length ?? 0) > 0 && (
-                <div className="absolute inset-x-0 top-[calc(100%+.5rem)] z-30 overflow-hidden rounded-xl border border-[#c4c5be] bg-[#f8f8f5] shadow-xl dark:border-white/15 dark:bg-[#20211f]">
-                  <p className="border-b border-[#d1d2cc] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#74766f] dark:border-white/10 dark:text-[#92948d]">
+
+              {showSuggestionPanel && (
+                <div className="absolute inset-x-0 top-[calc(100%+.6rem)] z-30 max-h-80 overflow-y-auto rounded-2xl border border-[#c4c5be] bg-[#f8f8f5] p-2 shadow-2xl dark:border-white/15 dark:bg-[#20211f]">
+                  <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#74766f] dark:text-[#92948d]">
                     {copy.locationHint}
                   </p>
-                  {locationQuery.data?.map((place) => (
-                    <button
-                      key={place.id}
-                      type="button"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => {
-                        setOrigin({
-                          lat: place.latitude,
-                          lng: place.longitude,
-                        });
-                        setSelectedPlace(place.address);
-                        setQuery(place.address);
-                        setSort("distance");
-                        setIsSearchFocused(false);
-                      }}
-                      className="flex w-full items-start gap-3 border-b border-[#d1d2cc] px-4 py-3 text-left last:border-0 hover:bg-[#ecece7] dark:border-white/10 dark:hover:bg-white/[0.06]"
-                    >
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b9473e] dark:text-[#ef7569]" />
-                      <span>
-                        <span className="block text-sm font-semibold">
-                          {place.label}
+                  {query.trim().length < 3 ? (
+                    <p className="px-3 pb-3 text-sm text-[#676964] dark:text-[#b7b8b2]">
+                      {copy.typeMore}
+                    </p>
+                  ) : locationQuery.isFetching ? (
+                    <div className="flex items-center gap-3 px-3 py-4 text-sm text-[#676964] dark:text-[#b7b8b2]">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#b9473e] dark:text-[#ef7569]" />
+                      {copy.searching}
+                    </div>
+                  ) : (locationQuery.data?.length ?? 0) > 0 ? (
+                    locationQuery.data?.map((place) => (
+                      <button
+                        key={place.id}
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setOrigin({
+                            lat: place.latitude,
+                            lng: place.longitude,
+                          });
+                          setSelectedPlace(place.address);
+                          setQuery(place.address);
+                          setIsSearchFocused(false);
+                        }}
+                        className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#ecece7] dark:hover:bg-white/[0.06]"
+                      >
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b9473e] dark:text-[#ef7569]" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold">
+                            {place.label}
+                          </span>
+                          <span className="mt-0.5 block text-xs leading-5 text-[#676964] dark:text-[#b7b8b2]">
+                            {place.address}
+                          </span>
                         </span>
-                        <span className="mt-0.5 block text-xs leading-5 text-[#676964] dark:text-[#b7b8b2]">
-                          {place.address}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 pb-3 text-sm text-[#676964] dark:text-[#b7b8b2]">
+                      {copy.noPlaces}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -437,300 +373,125 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
 
       <section className="px-4 pb-28 pt-8 sm:px-6 md:pb-40 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-10 border-y border-[#d1d2cc] py-5 dark:border-white/12">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-center">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <SlidersHorizontal
-                  className="h-4 w-4 text-[#b9473e] dark:text-[#ef7569]"
-                  strokeWidth={1.8}
-                />
-                {copy.filters}
-              </div>
-
-              <div className="flex flex-1 flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <fieldset>
-                  <legend className="sr-only">{copy.species}</legend>
-                  <div className="flex flex-wrap gap-2">
-                    {SPECIES.map((item) => {
-                      const active = species === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => setSpecies(item.id)}
-                          className={`min-h-10 whitespace-nowrap rounded-lg border px-3.5 text-sm font-semibold transition active:translate-y-px ${
-                            active
-                              ? "border-[#20211f] bg-[#20211f] text-[#f5f5ef] dark:border-[#ef7569] dark:bg-[#ef7569] dark:text-[#1a1b19]"
-                              : "border-[#c4c5be] text-[#5d5f59] hover:border-[#b9473e] hover:text-[#b9473e] dark:border-white/15 dark:text-[#c6c7c0] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
-                          }`}
-                        >
-                          {item.label[locale]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-
-                <div className="grid grid-cols-2 gap-2 sm:flex">
-                  <label className="relative">
-                    <span className="sr-only">{copy.status}</span>
-                    <select
-                      value={status}
-                      onChange={(event) =>
-                        setStatus(event.target.value as ClinicStatus | "all")
-                      }
-                      className="min-h-10 w-full appearance-none rounded-lg border border-[#c4c5be] bg-transparent py-2 pl-3 pr-9 text-sm font-semibold text-[#4b4d48] outline-none transition focus:border-[#b9473e] focus:ring-4 focus:ring-[#d85f53]/15 dark:border-white/15 dark:text-[#d6d7d0]"
-                    >
-                      <option value="all">{copy.allStatuses}</option>
-                      {Object.entries(STATUS).map(([key, labels]) => (
-                        <option key={key} value={key}>
-                          {labels[locale]}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                      strokeWidth={1.8}
-                    />
-                  </label>
-
-                  <label className="relative">
-                    <span className="sr-only">{copy.sort}</span>
-                    <select
-                      value={sort}
-                      onChange={(event) =>
-                        setSort(event.target.value as "distance" | "rating")
-                      }
-                      className="min-h-10 w-full appearance-none rounded-lg border border-[#c4c5be] bg-transparent py-2 pl-3 pr-9 text-sm font-semibold text-[#4b4d48] outline-none transition focus:border-[#b9473e] focus:ring-4 focus:ring-[#d85f53]/15 dark:border-white/15 dark:text-[#d6d7d0]"
-                    >
-                      <option value="distance">{copy.sortDistance}</option>
-                      <option value="rating">{copy.sortRating}</option>
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                      strokeWidth={1.8}
-                    />
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-14">
             <div className="lg:col-span-7">
-              <p className="mb-6 text-sm text-[#676964] dark:text-[#b7b8b2]">
-                <span className="text-2xl font-semibold tracking-[-0.03em] text-[#20211f] dark:text-[#f1f1ed]">
-                  {filteredClinics.length}
-                </span>{" "}
-                {copy.result}
-              </p>
+              <div className="mb-6 flex items-end justify-between gap-4 border-b border-[#c4c5be] pb-5 dark:border-white/15">
+                <p className="text-sm text-[#676964] dark:text-[#b7b8b2]">
+                  <span className="mr-2 text-3xl font-semibold tracking-[-0.04em] text-[#20211f] dark:text-[#f1f1ed]">
+                    {nearbyClinics.length}
+                  </span>
+                  {copy.results}
+                </p>
+                <span className="hidden text-xs font-semibold text-[#74766f] dark:text-[#92948d] sm:block">
+                  {copy.source}
+                </span>
+              </div>
 
-              {clinicsQuery.isLoading ? (
-                <div className="flex min-h-64 items-center justify-center gap-3 border-y border-[#c4c5be] text-sm text-[#676964] dark:border-white/15 dark:text-[#b7b8b2]">
-                  <Loader2 className="h-5 w-5 animate-spin text-[#b9473e] dark:text-[#ef7569]" />
-                  {copy.loading}
+              {mapDataQuery.isFetching || clinicsQuery.isLoading ? (
+                <div className="space-y-3" aria-label={copy.searching}>
+                  {[0, 1, 2].map((item) => (
+                    <div
+                      key={item}
+                      className="h-32 animate-pulse rounded-2xl bg-[#e3e3de] dark:bg-[#242523]"
+                    />
+                  ))}
                 </div>
-              ) : filteredClinics.length > 0 ? (
-                <div className="border-t border-[#c4c5be] dark:border-white/15">
-                  {filteredClinics.map((clinic) => {
-                    const selected = clinic.id === selectedClinic?.id;
-                    const clinicStatus = UI_STATUS[clinic.status];
-                    const clinicImage =
-                      clinic.coverImageUrl ??
-                      clinic.logoUrl ??
-                      "/images/petcare-consultation.webp";
-
+              ) : nearbyClinics.length > 0 ? (
+                <div className="space-y-3">
+                  {nearbyClinics.map((clinic, index) => {
+                    const focused = clinic.id === focusedResultId;
+                    const distance = formatDistance(
+                      clinic.distanceMeters,
+                      locale,
+                    );
                     return (
                       <article
                         key={clinic.id}
-                        data-clinic-row
-                        className="group border-b border-[#c4c5be] py-7 dark:border-white/15"
+                        className={`rounded-2xl border p-5 transition sm:p-6 ${
+                          focused
+                            ? "border-[#d85f53] bg-[#eee4e1] shadow-[0_14px_35px_rgba(32,33,31,.08)] dark:bg-[#2b2220]"
+                            : "border-[#c4c5be] bg-[#f8f8f5] hover:border-[#a6a8a0] dark:border-white/12 dark:bg-[#20211f] dark:hover:border-white/25"
+                        }`}
                       >
-                        <button
-                          type="button"
-                          onClick={() => setSelectedId(clinic.id)}
-                          className="grid w-full gap-6 text-left sm:grid-cols-[11rem_1fr]"
-                          aria-label={`${copy.selected}: ${clinic.name}`}
-                        >
-                          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#deded8] dark:bg-[#292a28]">
-                            <Image
-                              data-clinic-image
-                              src={clinicImage}
-                              alt=""
-                              fill
-                              sizes="(min-width: 640px) 176px, 100vw"
-                              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                            />
-                          </div>
-
-                          <div className="min-w-0">
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-                                  <span
-                                    className={
-                                      clinicStatus === "closed"
-                                        ? "text-[#74766f] dark:text-[#92948d]"
-                                        : "text-[#47735e] dark:text-[#8fc3aa]"
-                                    }
-                                  >
-                                    {STATUS[clinicStatus][locale]}
-                                  </span>
-                                  {clinic.is24h && (
-                                    <span className="inline-flex items-center gap-1.5 text-[#b9473e] dark:text-[#ef7569]">
-                                      <Clock3
-                                        className="h-3.5 w-3.5"
-                                        strokeWidth={1.8}
-                                      />
-                                      {copy.openAllDay}
-                                    </span>
-                                  )}
-                                </div>
-                                <h2 className="text-xl font-semibold leading-tight tracking-[-0.025em] text-[#20211f] transition-colors group-hover:text-[#b9473e] dark:text-[#f1f1ed] dark:group-hover:text-[#ef7569] sm:text-2xl">
-                                  {clinic.name}
-                                </h2>
-                              </div>
-
-                              {selected && (
-                                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#d85f53] text-[#1a1b19]">
-                                  <Check
-                                    className="h-4 w-4"
-                                    strokeWidth={2.2}
-                                    aria-hidden="true"
-                                  />
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="mt-2 flex items-start gap-2 text-sm leading-relaxed text-[#676964] dark:text-[#b7b8b2]">
-                              <MapPin
-                                className="mt-0.5 h-4 w-4 shrink-0 text-[#b9473e] dark:text-[#ef7569]"
-                                strokeWidth={1.8}
-                              />
+                        <div className="flex items-start gap-4">
+                          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#d85f53] text-sm font-bold text-[#191a18] ring-4 ring-[#d85f53]/15">
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[#b9473e] dark:text-[#ef7569]">
+                              {copy.source}
+                            </p>
+                            <h2 className="mt-2 text-xl font-semibold leading-tight tracking-[-0.025em] sm:text-2xl">
+                              {clinic.name}
+                            </h2>
+                            <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#676964] dark:text-[#b7b8b2]">
+                              <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#b9473e] dark:text-[#ef7569]" />
                               {clinic.address}
                             </p>
-
-                            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                              <span className="inline-flex items-center gap-1.5 font-semibold">
-                                <Star
-                                  className="h-4 w-4 fill-[#d85f53] text-[#d85f53]"
-                                  strokeWidth={1.8}
-                                />
-                                {clinic.rating}
-                                <span className="font-normal text-[#74766f] dark:text-[#92948d]">
-                                  ({formatReviews(clinic.reviewCount, locale)}{" "}
-                                  {copy.reviews})
-                                </span>
-                              </span>
-                              {clinic.distanceKm !== null && (
-                                <span className="font-semibold text-[#b9473e] dark:text-[#ef7569]">
-                                  {clinic.distanceKm.toLocaleString(
-                                    locale === "vi" ? "vi-VN" : "en-US",
-                                  )}{" "}
-                                  km
+                            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-semibold text-[#5d5f59] dark:text-[#c6c7c0]">
+                              {distance && (
+                                <span className="rounded-full bg-[#e5e5df] px-3 py-1.5 dark:bg-white/[0.07]">
+                                  {distance} {copy.distance}
                                 </span>
                               )}
-                              {clinic.isVerified && (
-                                <span className="inline-flex items-center gap-1.5 text-[#5d5f59] dark:text-[#c6c7c0]">
-                                  <ShieldCheck
-                                    className="h-4 w-4"
-                                    strokeWidth={1.8}
-                                  />
-                                  {clinic.name.startsWith("[DEMO]")
-                                    ? "Demo"
-                                    : copy.verified}
+                              {clinic.categories.slice(0, 2).map((category) => (
+                                <span
+                                  key={category}
+                                  className="rounded-full border border-[#d1d2cc] px-3 py-1.5 dark:border-white/10"
+                                >
+                                  {category}
                                 </span>
-                              )}
+                              ))}
                             </div>
-
-                            <p className="mt-4 text-sm leading-relaxed text-[#5d5f59] dark:text-[#c6c7c0]">
-                              {clinic.specializations
-                                .map((item) =>
-                                  item
-                                    .replaceAll("_", " ")
-                                    .toLocaleLowerCase(locale),
-                                )
-                                .join(" / ")}
-                            </p>
                           </div>
-                        </button>
-
-                        <div className="mt-5 flex items-center justify-end gap-3 sm:pl-[12.5rem]">
-                          <a
-                            href={
-                              clinic.phone
-                                ? `tel:${clinic.phone.replace(/\s/g, "")}`
-                                : undefined
-                            }
-                            aria-disabled={!clinic.phone}
-                            className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#b4b6af] px-4 text-sm font-bold text-[#393a37] transition hover:border-[#b9473e] hover:text-[#b9473e] active:translate-y-px dark:border-white/20 dark:text-[#d6d7d0] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
-                          >
-                            <Phone className="h-4 w-4" strokeWidth={1.8} />
-                            {clinic.phone
-                              ? copy.call
-                              : locale === "vi"
-                                ? "Demo — không gọi"
-                                : "Demo — no phone"}
-                          </a>
-                          <a
-                            href={
-                              clinic.website ??
-                              (clinic.phone
-                                ? `tel:${clinic.phone.replace(/[^+\d]/g, "")}`
-                                : undefined)
-                            }
-                            aria-disabled={!clinic.website && !clinic.phone}
-                            target={clinic.website ? "_blank" : undefined}
-                            rel={clinic.website ? "noreferrer" : undefined}
-                            className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#20211f] px-4 text-sm font-bold text-[#f5f5ef] transition hover:-translate-y-0.5 hover:bg-[#353633] active:translate-y-px dark:bg-[#d85f53] dark:text-[#1a1b19] dark:hover:bg-[#ef7569]"
-                          >
-                            {copy.details}
-                            <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
-                          </a>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => handleResultSelect(clinic.id)}
+                          className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#20211f] px-4 text-sm font-bold text-[#f5f5ef] transition hover:-translate-y-0.5 hover:bg-[#353633] active:translate-y-px dark:bg-[#d85f53] dark:text-[#1a1b19] dark:hover:bg-[#ef7569] sm:ml-[3.25rem] sm:w-auto"
+                        >
+                          {copy.showOnMap}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
                       </article>
                     );
                   })}
                 </div>
               ) : (
-                <div className="rounded-xl border border-[#c4c5be] px-6 py-16 text-center dark:border-white/15">
-                  <Search
-                    className="mx-auto h-8 w-8 text-[#b9473e] dark:text-[#ef7569]"
-                    strokeWidth={1.6}
-                  />
+                <div className="rounded-2xl border border-[#c4c5be] bg-[#f8f8f5] px-6 py-16 text-center dark:border-white/15 dark:bg-[#20211f]">
+                  <Search className="mx-auto h-8 w-8 text-[#b9473e] dark:text-[#ef7569]" />
                   <h2 className="mt-5 text-2xl font-semibold tracking-[-0.03em]">
-                    {copy.emptyTitle}
+                    {canSearchMap ? copy.emptyTitle : copy.selectLocation}
                   </h2>
                   <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#676964] dark:text-[#b7b8b2]">
                     {copy.emptyBody}
                   </p>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="mt-6 min-h-11 whitespace-nowrap rounded-lg bg-[#20211f] px-5 text-sm font-bold text-[#f5f5ef] transition hover:bg-[#353633] active:translate-y-px dark:bg-[#d85f53] dark:text-[#1a1b19] dark:hover:bg-[#ef7569]"
-                  >
-                    {copy.clear}
-                  </button>
                 </div>
               )}
             </div>
 
             <aside className="lg:sticky lg:top-24 lg:col-span-5">
               <div className="overflow-hidden rounded-2xl bg-[#242523] text-[#f1f1ed]">
-                <div className="relative min-h-[23rem] overflow-hidden">
+                <div className="relative min-h-[28rem] overflow-hidden">
                   <ClinicMap
-                    clinics={filteredClinics}
-                    selectedId={selectedClinic?.id}
+                    center={mapDataQuery.data?.center ?? null}
+                    centerLabel={selectedPlace ?? copy.searchCenter}
+                    selectedClinic={mapDataQuery.data?.selected ?? null}
+                    nearbyClinics={nearbyClinics}
+                    focusedResultId={focusedResultId}
                     locale={locale}
-                    onSelect={setSelectedId}
+                    isSearching={mapDataQuery.isFetching}
+                    searchFailed={Boolean(
+                      mapDataQuery.error || mapDataQuery.data?.warning,
+                    )}
+                    onNearbySelect={handleResultSelect}
                   />
                 </div>
 
-                <div className="border-t border-white/10 p-6 sm:p-8">
+                <div className="border-t border-white/10 p-6 sm:p-7">
                   <div className="flex items-start gap-4">
                     <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#d85f53] text-[#1a1b19]">
-                      <MapPin className="h-5 w-5" strokeWidth={1.8} />
+                      <Navigation className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-[#f1f1ed]">
@@ -742,21 +503,20 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                     </div>
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-xs text-[#b7b8b2]">
-                    <span>{copy.mapPending}</span>
-                    <Clock3 className="h-4 w-4 shrink-0 text-[#ef7569]" />
-                  </div>
-
-                  {selectedClinic && (
-                    <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.04] p-4">
-                      <p className="text-base font-semibold text-[#f1f1ed]">
-                        {selectedClinic.name}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-[#b7b8b2]">
-                        {selectedClinic.address}
-                      </p>
+                  <div className="mt-6 grid grid-cols-2 gap-2 text-xs font-semibold text-[#d6d7d0]">
+                    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                      <span className="grid h-6 w-6 place-items-center rounded-full bg-[#d85f53] font-bold text-[#191a18]">
+                        ⌖
+                      </span>
+                      {copy.searchCenter}
                     </div>
-                  )}
+                    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                      <span className="grid h-6 w-6 place-items-center rounded-full bg-[#d85f53] text-[10px] font-bold text-[#191a18]">
+                        1
+                      </span>
+                      {copy.nearbyClinic}
+                    </div>
+                  </div>
                 </div>
               </div>
             </aside>

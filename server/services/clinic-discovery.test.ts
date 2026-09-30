@@ -60,6 +60,25 @@ test("clinic discovery never exposes unverified records", () => {
   );
 });
 
+test("clinic discovery never exposes seeded demo records", () => {
+  const result = discoverClinics(
+    [
+      ...clinics,
+      {
+        ...clinics[0]!,
+        id: "seeded-demo",
+        name: "[DEMO] PetCare Chăm sóc tổng quát Cần Thơ",
+      },
+    ],
+    {},
+  );
+
+  assert.equal(
+    result.some((clinic) => clinic.id === "seeded-demo"),
+    false,
+  );
+});
+
 test("clinic discovery ranks by real distance and applies a radius", () => {
   const result = discoverClinics(clinics, {
     origin: { latitude: 21.0601, longitude: 105.8298 },
@@ -91,13 +110,19 @@ test("nearby discovery excludes clinics that have no verified coordinates", () =
     },
   );
 
-  assert.deepEqual(result.map((clinic) => clinic.id), ["near"]);
+  assert.deepEqual(
+    result.map((clinic) => clinic.id),
+    ["near"],
+  );
 });
 
 test("clinic discovery matches Vietnamese text without requiring accents", () => {
   const result = discoverClinics(clinics, { query: "thu y tay ho" });
 
-  assert.deepEqual(result.map((clinic) => clinic.id), ["near"]);
+  assert.deepEqual(
+    result.map((clinic) => clinic.id),
+    ["near"],
+  );
 });
 
 test("clinic discovery applies emergency and species filters together", () => {
@@ -107,5 +132,8 @@ test("clinic discovery applies emergency and species filters together", () => {
     species: "CAT",
   });
 
-  assert.deepEqual(result.map((clinic) => clinic.id), ["near"]);
+  assert.deepEqual(
+    result.map((clinic) => clinic.id),
+    ["near"],
+  );
 });

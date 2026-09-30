@@ -4,6 +4,20 @@ const MAPBOX_SEARCH_BOX_FORWARD_URL =
   "https://api.mapbox.com/search/searchbox/v1/forward";
 const VETERINARY_SEARCH_TERMS = ["veterinary", "thú y", "pet clinic"] as const;
 const MAX_EXACT_MATCH_DISTANCE_KM = 5;
+const VETERINARY_NAME_TERMS = [
+  "veterinary",
+  "pet clinic",
+  "animal hospital",
+  "phong kham",
+  "benh vien thu y",
+  "benh vien thu cung",
+] as const;
+const VETERINARY_CATEGORY_TERMS = [
+  "veterinary",
+  "pet clinic",
+  "animal hospital",
+] as const;
+const EXCLUDED_CATEGORY_TERMS = ["jewelry"] as const;
 
 interface MapboxSearchBoxFeature {
   id?: string;
@@ -44,7 +58,7 @@ interface Coordinates {
 }
 
 export type ClinicMapCenter = Coordinates & {
-  source: "mapbox" | "database";
+  source: "mapbox" | "database" | "location";
 };
 
 function distanceBetweenKm(a: Coordinates, b: Coordinates) {
@@ -64,12 +78,17 @@ function distanceBetweenKm(a: Coordinates, b: Coordinates) {
 }
 
 export function selectClinicMapCenter({
+  requestedCenter,
   databaseCenter,
   searchResult,
 }: {
+  requestedCenter?: Coordinates | null;
   databaseCenter?: Coordinates | null;
   searchResult?: Coordinates | null;
 }): ClinicMapCenter | null {
+  if (requestedCenter) {
+    return { ...requestedCenter, source: "location" };
+  }
   if (
     searchResult &&
     (!databaseCenter ||
@@ -258,6 +277,30 @@ export async function searchNearbyVeterinaryClinics({
 
   const uniqueResults = new Map<string, MapboxClinicSearchResult>();
   for (const result of resultGroups.flat()) {
+    const normalizedName = normalizeSearchText(result.name);
+    const normalizedCategories = normalizeSearchText(
+      result.categories.join(" "),
+    );
+    const exceedsRadius =
+      result.distanceMeters !== null && result.distanceMeters > radiusKm * 1000;
+    const hasExcludedCategory = EXCLUDED_CATEGORY_TERMS.some((term) =>
+      normalizedCategories.includes(term),
+    );
+    const hasVeterinaryCategory = VETERINARY_CATEGORY_TERMS.some((term) =>
+      normalizedCategories.includes(term),
+    );
+    const hasVeterinaryName =
+      VETERINARY_NAME_TERMS.some((term) => normalizedName.includes(term)) ||
+      /(^|\s)vet(\s|$)/.test(normalizedName);
+
+    if (
+      exceedsRadius ||
+      hasExcludedCategory ||
+      (!hasVeterinaryCategory && !hasVeterinaryName)
+    ) {
+      continue;
+    }
+
     const current = uniqueResults.get(result.id);
     if (
       !current ||

@@ -72,7 +72,10 @@ export function discoverClinics<T extends DiscoverableClinic>(
 
   const discovered = clinics
     .filter((clinic) => clinic.isVerified)
-    .filter((clinic) => options.is24h === undefined || clinic.is24h === options.is24h)
+    .filter((clinic) => !normalizeSearchText(clinic.name).startsWith("[demo]"))
+    .filter(
+      (clinic) => options.is24h === undefined || clinic.is24h === options.is24h,
+    )
     .filter(
       (clinic) =>
         !options.species || clinic.specializations.includes(options.species),
@@ -83,9 +86,7 @@ export function discoverClinics<T extends DiscoverableClinic>(
     )
     .map((clinic) => {
       const distanceKm =
-        options.origin &&
-        clinic.latitude !== null &&
-        clinic.longitude !== null
+        options.origin && clinic.latitude !== null && clinic.longitude !== null
           ? distanceBetweenKm(options.origin, {
               latitude: clinic.latitude,
               longitude: clinic.longitude,

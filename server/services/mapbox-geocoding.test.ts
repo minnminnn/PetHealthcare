@@ -199,6 +199,32 @@ test("nearby clinic search covers all requested veterinary keywords and removes 
                   distance: 940,
                 },
               },
+              {
+                id: "poi.jewelry",
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [105.831, 21.062] },
+                properties: {
+                  mapbox_id: "jewelry-id",
+                  feature_type: "poi",
+                  name: "PNJ 19 Thú Y",
+                  place_formatted: "Hà Nội, Việt Nam",
+                  poi_category: ["jewelry store", "shopping"],
+                  distance: 300,
+                },
+              },
+              {
+                id: "poi.too-far",
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [106.1, 21.2] },
+                properties: {
+                  mapbox_id: "too-far-id",
+                  feature_type: "poi",
+                  name: "Far Away Veterinary Clinic",
+                  place_formatted: "Bắc Ninh, Việt Nam",
+                  poi_category: ["veterinary"],
+                  distance: 9_500,
+                },
+              },
             ]
           : [];
 
@@ -278,5 +304,22 @@ test("clinic map center accepts a nearby exact match but rejects a distant false
       searchResult: { latitude: 10.7769, longitude: 106.7009 },
     }),
     { latitude: 21.06, longitude: 105.83, source: "database" },
+  );
+});
+
+test("clinic map center uses an explicitly selected search area", () => {
+  const selectClinicMapCenter = Reflect.get(
+    mapboxSearch,
+    "selectClinicMapCenter",
+  );
+  assert.equal(typeof selectClinicMapCenter, "function");
+
+  assert.deepEqual(
+    selectClinicMapCenter({
+      requestedCenter: { latitude: 20.4388, longitude: 106.1621 },
+      databaseCenter: { latitude: 21.0285, longitude: 105.8542 },
+      searchResult: { latitude: 21.03, longitude: 105.86 },
+    }),
+    { latitude: 20.4388, longitude: 106.1621, source: "location" },
   );
 });
