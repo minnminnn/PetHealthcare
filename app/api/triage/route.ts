@@ -1,6 +1,5 @@
 import { streamText } from "ai";
-import { createGroq } from "@ai-sdk/groq";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGroq, type GroqLanguageModelChatOptions } from "@ai-sdk/groq";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { env } from "@/env";
@@ -10,7 +9,7 @@ import { discoverClinics } from "@/server/services/clinic-discovery";
 import {
   buildClinicContext,
   createSlidingWindowRateLimiter,
-  resolveAIProviderConfig,
+  resolveGroqConfig,
   triageRequestSchema,
 } from "@/server/services/petcare-ai";
 
@@ -22,6 +21,14 @@ const rateLimiter = createSlidingWindowRateLimiter({
   windowMs: 60_000,
 });
 
+const groqConfig = resolveGroqConfig({
+  apiKey: env.GROQ_API_KEY,
+  model: env.GROQ_MODEL,
+});
+const groq = groqConfig
+  ? createGroq({ apiKey: groqConfig.apiKey })
+  : null;
+
 function requestIdentity(request: NextRequest) {
   return (
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -31,13 +38,7 @@ function requestIdentity(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const providerConfig = resolveAIProviderConfig({
-    groqApiKey: env.GROQ_API_KEY,
-    groqModel: env.GROQ_MODEL,
-    googleApiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
-    googleModel: env.GOOGLE_GENERATIVE_AI_MODEL,
-  });
-  if (!providerConfig) {
+  if (!groq || !groqConfig) {
     return NextResponse.json(
       { error: "AI is not configured / Chưa cấu hình AI" },
       { status: 503 },
@@ -72,15 +73,9 @@ export async function POST(request: NextRequest) {
         ? "Reply in Vietnamese unless the user clearly asks for another language."
         : "Reply in English unless the user clearly asks for another language.";
 
-    const model =
-      providerConfig.provider === "groq"
-        ? createGroq({ apiKey: providerConfig.apiKey })(providerConfig.model)
-        : createGoogleGenerativeAI({ apiKey: providerConfig.apiKey })(
-            providerConfig.model,
-          );
     const result = await streamText({
-      model,
-      system: `${PETCARE_SYSTEM_PROMPT}\n\n${languageInstruction}\n\n${clinicContext}`,
+      model: groq(groqConfig.model),
+      instructions: `${PETCARE_SYSTEM_PROMPT}\n\n${languageInstruction}\n\n${clinicContext}`,
       messages: [
         ...input.history.map((message) => ({
           role: message.role,
@@ -90,10 +85,16 @@ export async function POST(request: NextRequest) {
       ],
       temperature: 0.2,
       maxRetries: 1,
-      // Gemini 3.x uses part of this budget for internal reasoning.
-      // Keep enough headroom so the visible safety guidance is not cut off.
-      maxTokens: 1_800,
+      maxOutputTokens: 1_800,
       abortSignal: request.signal,
+      providerOptions: groqConfig.model.startsWith("openai/gpt-oss-")
+        ? {
+            groq: {
+              reasoningEffort: "low",
+              reasoningFormat: "hidden",
+            } satisfies GroqLanguageModelChatOptions,
+          }
+        : undefined,
     });
 
     return result.toTextStreamResponse({

@@ -1,42 +1,32 @@
 import { z } from "zod";
 
 const DEFAULT_GROQ_MODEL = "openai/gpt-oss-20b";
-const DEFAULT_GOOGLE_MODEL = "gemini-3.7-flash";
+const RETIRED_GROQ_MODELS = new Set([
+  "groq/compound",
+  "groq/compound-mini",
+  "llama-3.1-8b-instant",
+  "llama-3.3-70b-versatile",
+  "qwen/qwen3.6-27b",
+]);
 
 export function resolveAIModel(value: string | undefined) {
-  return value?.trim() || DEFAULT_GROQ_MODEL;
+  const model = value?.trim();
+  return !model || RETIRED_GROQ_MODELS.has(model)
+    ? DEFAULT_GROQ_MODEL
+    : model;
 }
 
-export function resolveAIProviderConfig({
-  groqApiKey,
-  groqModel,
-  googleApiKey,
-  googleModel,
+export function resolveGroqConfig({
+  apiKey,
+  model,
 }: {
-  groqApiKey?: string;
-  groqModel?: string;
-  googleApiKey?: string;
-  googleModel?: string;
+  apiKey?: string;
+  model?: string;
 }) {
-  const normalizedGroqKey = groqApiKey?.trim();
-  if (normalizedGroqKey) {
-    return {
-      provider: "groq" as const,
-      apiKey: normalizedGroqKey,
-      model: resolveAIModel(groqModel),
-    };
-  }
-
-  const normalizedGoogleKey = googleApiKey?.trim();
-  if (normalizedGoogleKey) {
-    return {
-      provider: "google" as const,
-      apiKey: normalizedGoogleKey,
-      model: googleModel?.trim() || DEFAULT_GOOGLE_MODEL,
-    };
-  }
-
-  return null;
+  const normalizedApiKey = apiKey?.trim();
+  return normalizedApiKey
+    ? { apiKey: normalizedApiKey, model: resolveAIModel(model) }
+    : null;
 }
 
 const messageSchema = z.object({

@@ -4,48 +4,56 @@ import test from "node:test";
 import {
   buildClinicContext,
   createSlidingWindowRateLimiter,
-  resolveAIProviderConfig,
   resolveAIModel,
+  resolveGroqConfig,
   triageRequestSchema,
 } from "./petcare-ai";
 
 test("AI model resolution never passes an absent model ID to the provider", () => {
   assert.equal(resolveAIModel(undefined), "openai/gpt-oss-20b");
   assert.equal(resolveAIModel("  "), "openai/gpt-oss-20b");
-  assert.equal(resolveAIModel("gemini-custom"), "gemini-custom");
+  assert.equal(resolveAIModel("openai/gpt-oss-120b"), "openai/gpt-oss-120b");
 });
 
-test("AI provider resolution falls back to the configured Google key", () => {
-  assert.deepEqual(
-    resolveAIProviderConfig({
-      googleApiKey: "google-test-key",
-    }),
-    {
-      provider: "google",
-      apiKey: "google-test-key",
-      model: "gemini-3.7-flash",
-    },
-  );
+test("AI model resolution replaces retired Groq models", () => {
+  for (const retiredModel of [
+    "groq/compound",
+    "groq/compound-mini",
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+    "qwen/qwen3.6-27b",
+  ]) {
+    assert.equal(resolveAIModel(retiredModel), "openai/gpt-oss-20b");
+  }
 });
 
-test("AI provider resolution prefers Groq when both providers are configured", () => {
+test("Groq configuration normalizes the key and applies the default model", () => {
   assert.deepEqual(
-    resolveAIProviderConfig({
-      groqApiKey: "groq-test-key",
-      groqModel: "custom-groq-model",
-      googleApiKey: "google-test-key",
-      googleModel: "custom-google-model",
+    resolveGroqConfig({
+      apiKey: "  groq-test-key  ",
     }),
     {
-      provider: "groq",
       apiKey: "groq-test-key",
-      model: "custom-groq-model",
+      model: "openai/gpt-oss-20b",
     },
   );
 });
 
-test("AI provider resolution reports missing provider configuration", () => {
-  assert.equal(resolveAIProviderConfig({}), null);
+test("Groq configuration accepts a custom model", () => {
+  assert.deepEqual(
+    resolveGroqConfig({
+      apiKey: "groq-test-key",
+      model: "openai/gpt-oss-120b",
+    }),
+    {
+      apiKey: "groq-test-key",
+      model: "openai/gpt-oss-120b",
+    },
+  );
+});
+
+test("Groq configuration reports a missing API key", () => {
+  assert.equal(resolveGroqConfig({}), null);
 });
 
 test("triage requests reject empty messages and oversized conversation history", () => {

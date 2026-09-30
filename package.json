@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "next build",
     "db:generate": "prisma generate",
@@ -22,8 +25,7 @@
     "clinics:match": "tsx scripts/match-clinic-names.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^0.0.52",
-    "@ai-sdk/groq": "0.0.3",
+    "@ai-sdk/groq": "4.0.54",
     "@auth/prisma-adapter": "^2.4.2",
     "@base-ui/react": "^1.8.0",
     "@gsap/react": "^2.1.2",
@@ -52,7 +54,7 @@
     "@trpc/react-query": "^11.0.0-rc.446",
     "@trpc/server": "^11.0.0-rc.446",
     "@uploadthing/react": "^6.7.2",
-    "ai": "^3.2.33",
+    "ai": "7.0.124",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
