@@ -21,6 +21,7 @@
   },
   "sos": {
     "button": "SOS khẩn cấp",
+    "ai-help": "AI Hỗ trợ",
     "title": "Hỗ trợ khẩn cấp",
     "subtitle": "Tìm cơ sở thú y khẩn cấp gần bạn.",
     "locating": "Đang xác định vị trí...",
@@ -39,6 +40,8 @@
     "loading": "Đang tải phòng khám khẩn cấp...",
     "emptyTitle": "Không tìm thấy phòng khám gần đây",
     "emptyBody": "Hãy bật quyền vị trí và thử lại, hoặc mở hướng dẫn khẩn cấp trong lúc sắp xếp chăm sóc thú y.",
+    "retryLocation": "Thử lại vị trí",
+    "emergencyGuide": "Hướng dẫn khẩn cấp",
     "triageIntro": "Hãy mô tả tình trạng hiện tại để nhận hướng dẫn sơ cứu tạm thời.",
     "triageWarning": "Hướng dẫn AI không thay thế bác sĩ thú y. Hãy liên hệ phòng khám ngay nếu thú cưng bất tỉnh, khó thở, chảy máu nhiều hoặc có thể bị ngộ độc.",
     "triageError": "Không thể kết nối. Vui lòng liên hệ trực tiếp với phòng khám thú y khẩn cấp.",
