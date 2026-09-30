@@ -4,6 +4,7 @@ import { useLocale } from "next-intl";
 import { api } from "@/trpc/react";
 import { Link } from "@/lib/navigation";
 import { formatCareDate, statusLabels } from "@/lib/care/labels";
+import { getClinicDisplayName } from "@/lib/care/display";
 import {
   CareShell,
   Field,
@@ -148,7 +149,7 @@ export function AppointmentsManager({
                   </option>
                   {clinics.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} · {c.city}
+                      {getClinicDisplayName(c.name)} · {c.city}
                     </option>
                   ))}
                 </select>
@@ -263,7 +264,7 @@ export function AppointmentsManager({
                 className="rounded-xl border border-black/10 p-4 dark:border-white/10"
               >
                 <p className="font-semibold">
-                  {a.pet.name} · {a.clinic.name}
+                  {a.pet.name} · {getClinicDisplayName(a.clinic.name)}
                 </p>
                 <p className="mt-2 text-sm">
                   {formatCareDate(a.scheduledAt, vi)} · {a.durationMinutes}{" "}

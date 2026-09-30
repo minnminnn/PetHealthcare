@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "@/trpc/react";
 import { Link } from "@/lib/navigation";
+import { getClinicDisplayName } from "@/lib/care/display";
 
 type PageLocale = "en" | "vi";
 type Specialty =
@@ -181,7 +182,10 @@ export function TeleVetExperience({ locale }: { locale: PageLocale }) {
           clinicId: clinic.id,
           name: vet.user.name ?? (locale === "vi" ? "Bác sĩ" : "Veterinarian"),
           specialty: [] as Specialty[],
-          specialtyLabel: { vi: clinic.name, en: clinic.name },
+          specialtyLabel: {
+            vi: getClinicDisplayName(clinic.name),
+            en: getClinicDisplayName(clinic.name),
+          },
           experience: vet.yearsExperience,
           available: true,
           species: vet.specializations.map((value) =>
