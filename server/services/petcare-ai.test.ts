@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildClinicContext,
   createSlidingWindowRateLimiter,
+  resolveAIProviderConfig,
   resolveAIModel,
   triageRequestSchema,
 } from "./petcare-ai";
@@ -12,6 +13,39 @@ test("AI model resolution never passes an absent model ID to the provider", () =
   assert.equal(resolveAIModel(undefined), "openai/gpt-oss-20b");
   assert.equal(resolveAIModel("  "), "openai/gpt-oss-20b");
   assert.equal(resolveAIModel("gemini-custom"), "gemini-custom");
+});
+
+test("AI provider resolution falls back to the configured Google key", () => {
+  assert.deepEqual(
+    resolveAIProviderConfig({
+      googleApiKey: "google-test-key",
+    }),
+    {
+      provider: "google",
+      apiKey: "google-test-key",
+      model: "gemini-3.7-flash",
+    },
+  );
+});
+
+test("AI provider resolution prefers Groq when both providers are configured", () => {
+  assert.deepEqual(
+    resolveAIProviderConfig({
+      groqApiKey: "groq-test-key",
+      groqModel: "custom-groq-model",
+      googleApiKey: "google-test-key",
+      googleModel: "custom-google-model",
+    }),
+    {
+      provider: "groq",
+      apiKey: "groq-test-key",
+      model: "custom-groq-model",
+    },
+  );
+});
+
+test("AI provider resolution reports missing provider configuration", () => {
+  assert.equal(resolveAIProviderConfig({}), null);
 });
 
 test("triage requests reject empty messages and oversized conversation history", () => {
@@ -98,11 +132,20 @@ test("rate limiter blocks excess requests and resets after its window", () => {
 });
 
 test("fictional demo clinics are not presented as verified care options to AI", () => {
-  const context = buildClinicContext([{
-    name: "[DEMO] PetCare Đa khoa Hà Nội", address: "Địa chỉ mô phỏng", phone: "",
-    city: "Hà Nội", status: "EMERGENCY", is24h: true, isVerified: true,
-    isExoticSpec: true, specializations: ["DOG", "CAT"], distanceKm: 0.1,
-  }]);
+  const context = buildClinicContext([
+    {
+      name: "[DEMO] PetCare Đa khoa Hà Nội",
+      address: "Địa chỉ mô phỏng",
+      phone: "",
+      city: "Hà Nội",
+      status: "EMERGENCY",
+      is24h: true,
+      isVerified: true,
+      isExoticSpec: true,
+      specializations: ["DOG", "CAT"],
+      distanceKm: 0.1,
+    },
+  ]);
   assert.doesNotMatch(context, /PetCare Đa khoa/);
   assert.match(context, /Do not name or invent a clinic/);
 });

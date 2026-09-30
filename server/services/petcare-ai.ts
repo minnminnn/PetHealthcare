@@ -1,9 +1,42 @@
 import { z } from "zod";
 
-const DEFAULT_AI_MODEL = "openai/gpt-oss-20b";
+const DEFAULT_GROQ_MODEL = "openai/gpt-oss-20b";
+const DEFAULT_GOOGLE_MODEL = "gemini-3.7-flash";
 
 export function resolveAIModel(value: string | undefined) {
-  return value?.trim() || DEFAULT_AI_MODEL;
+  return value?.trim() || DEFAULT_GROQ_MODEL;
+}
+
+export function resolveAIProviderConfig({
+  groqApiKey,
+  groqModel,
+  googleApiKey,
+  googleModel,
+}: {
+  groqApiKey?: string;
+  groqModel?: string;
+  googleApiKey?: string;
+  googleModel?: string;
+}) {
+  const normalizedGroqKey = groqApiKey?.trim();
+  if (normalizedGroqKey) {
+    return {
+      provider: "groq" as const,
+      apiKey: normalizedGroqKey,
+      model: resolveAIModel(groqModel),
+    };
+  }
+
+  const normalizedGoogleKey = googleApiKey?.trim();
+  if (normalizedGoogleKey) {
+    return {
+      provider: "google" as const,
+      apiKey: normalizedGoogleKey,
+      model: googleModel?.trim() || DEFAULT_GOOGLE_MODEL,
+    };
+  }
+
+  return null;
 }
 
 const messageSchema = z.object({

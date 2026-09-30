@@ -23,7 +23,9 @@ export const env = createEnv({
     UPLOADTHING_APP_ID: z.string().optional(),
     // AI
     GROQ_API_KEY: z.string().min(1).optional(),
-GROQ_MODEL: z.string().optional(),
+    GROQ_MODEL: z.string().optional(),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1).optional(),
+    GOOGLE_GENERATIVE_AI_MODEL: z.string().optional(),
     // Inngest
     INNGEST_EVENT_KEY: z.string().optional(),
     INNGEST_SIGNING_KEY: z.string().optional(),
@@ -59,6 +61,8 @@ GROQ_MODEL: z.string().optional(),
     UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
     GROQ_API_KEY: process.env.GROQ_API_KEY,
     GROQ_MODEL: process.env.GROQ_MODEL,
+    GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    GOOGLE_GENERATIVE_AI_MODEL: process.env.GOOGLE_GENERATIVE_AI_MODEL,
     INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
@@ -76,6 +80,8 @@ GROQ_MODEL: z.string().optional(),
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
-  skipValidation: process.env.SKIP_ENV_VALIDATION === "1" || process.env.SKIP_ENV_VALIDATION === "true",
+  skipValidation:
+    process.env.SKIP_ENV_VALIDATION === "1" ||
+    process.env.SKIP_ENV_VALIDATION === "true",
   emptyStringAsUndefined: true,
 });

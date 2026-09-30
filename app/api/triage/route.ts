@@ -1,5 +1,6 @@
 import { streamText } from "ai";
 import { createGroq } from "@ai-sdk/groq";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { env } from "@/env";
@@ -9,12 +10,10 @@ import { discoverClinics } from "@/server/services/clinic-discovery";
 import {
   buildClinicContext,
   createSlidingWindowRateLimiter,
-  resolveAIModel,
+  resolveAIProviderConfig,
   triageRequestSchema,
 } from "@/server/services/petcare-ai";
-const groq = createGroq({
-  apiKey: env.GROQ_API_KEY,
-});
+
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
@@ -32,7 +31,18 @@ function requestIdentity(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!env.GROQ_API_KEY) return NextResponse.json({ error: "AI is not configured / Chưa cấu hình AI" }, { status: 503 });
+  const providerConfig = resolveAIProviderConfig({
+    groqApiKey: env.GROQ_API_KEY,
+    groqModel: env.GROQ_MODEL,
+    googleApiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+    googleModel: env.GOOGLE_GENERATIVE_AI_MODEL,
+  });
+  if (!providerConfig) {
+    return NextResponse.json(
+      { error: "AI is not configured / Chưa cấu hình AI" },
+      { status: 503 },
+    );
+  }
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 64_000) {
     return NextResponse.json(
@@ -62,8 +72,14 @@ export async function POST(request: NextRequest) {
         ? "Reply in Vietnamese unless the user clearly asks for another language."
         : "Reply in English unless the user clearly asks for another language.";
 
+    const model =
+      providerConfig.provider === "groq"
+        ? createGroq({ apiKey: providerConfig.apiKey })(providerConfig.model)
+        : createGoogleGenerativeAI({ apiKey: providerConfig.apiKey })(
+            providerConfig.model,
+          );
     const result = await streamText({
-      model: groq(resolveAIModel(env.GROQ_MODEL)),
+      model,
       system: `${PETCARE_SYSTEM_PROMPT}\n\n${languageInstruction}\n\n${clinicContext}`,
       messages: [
         ...input.history.map((message) => ({
@@ -73,6 +89,7 @@ export async function POST(request: NextRequest) {
         { role: "user" as const, content: input.message },
       ],
       temperature: 0.2,
+      maxRetries: 1,
       // Gemini 3.x uses part of this budget for internal reasoning.
       // Keep enough headroom so the visible safety guidance is not cut off.
       maxTokens: 1_800,
