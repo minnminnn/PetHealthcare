@@ -14,6 +14,7 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
+import { api } from "@/trpc/react";
 import { Link } from "@/lib/navigation";
 
 type PageLocale = "en" | "vi";
@@ -21,99 +22,36 @@ type Specialty =
   "all" | "internal" | "surgery" | "dermatology" | "exotic" | "reproduction";
 type Species = "all" | "dog" | "cat" | "bird" | "reptile" | "rabbit";
 
-const VETS = [
-  {
-    id: "v1",
-    name: "BS. Nguyễn Minh Tuấn",
-    specialty: ["internal"] as Specialty[],
-    specialtyLabel: {
-      en: "Internal medicine and cardiology",
-      vi: "Nội khoa và tim mạch",
-    },
-    experience: 12,
-    price: 150000,
-    available: true,
-    nextSlot: { en: "Today, 14:30", vi: "Hôm nay, 14:30" },
-    species: ["dog", "cat"] as Species[],
-    languages: ["Tiếng Việt", "English"],
-  },
-  {
-    id: "v2",
-    name: "BS. Trần Thị Lan Anh",
-    specialty: ["exotic", "dermatology"] as Specialty[],
-    specialtyLabel: {
-      en: "Exotic pets and dermatology",
-      vi: "Thú ngoại lai và da liễu",
-    },
-    experience: 8,
-    price: 180000,
-    available: true,
-    nextSlot: { en: "Today, 16:00", vi: "Hôm nay, 16:00" },
-    species: ["bird", "reptile", "rabbit"] as Species[],
-    languages: ["Tiếng Việt"],
-  },
-  {
-    id: "v3",
-    name: "BS. Lê Hồng Phúc",
-    specialty: ["surgery"] as Specialty[],
-    specialtyLabel: {
-      en: "Surgery and orthopaedics",
-      vi: "Phẫu thuật và chỉnh hình",
-    },
-    experience: 15,
-    price: 250000,
-    available: false,
-    nextSlot: { en: "Tomorrow, 09:00", vi: "Ngày mai, 09:00" },
-    species: ["dog", "cat"] as Species[],
-    languages: ["Tiếng Việt", "English"],
-  },
-  {
-    id: "v4",
-    name: "BS. Phạm Thu Hiền",
-    specialty: ["reproduction"] as Specialty[],
-    specialtyLabel: {
-      en: "Reproduction and maternity care",
-      vi: "Sản khoa và sinh sản",
-    },
-    experience: 6,
-    price: 120000,
-    available: true,
-    nextSlot: { en: "Today, 15:00", vi: "Hôm nay, 15:00" },
-    species: ["dog", "cat"] as Species[],
-    languages: ["Tiếng Việt"],
-  },
-] as const;
-
 const COPY = {
   en: {
-    eyebrow: "ONLINE VETERINARY CARE",
+    eyebrow: "VETERINARY APPOINTMENTS",
     title: "Veterinary care, now.",
     intro:
-      "Talk with a veterinary professional from home and decide the right next step for your pet.",
+      "Find a veterinary professional and request an appointment for your pet.",
     findVet: "Find a vet",
-    prepare: "Prepare for a call",
+    prepare: "Prepare for your visit",
     imageAlt: "A veterinarian examining a dog with its owner",
     verified: "Verified veterinary profiles",
-    secure: "Private video sessions",
+    secure: "Clinic appointment requests",
     support: "Clear follow-up guidance",
     directoryEyebrow: "AVAILABLE CARE",
     directoryTitle: "Choose the right clinician",
     directoryBody:
-      "Filter by care area and species. Availability is shown before you choose.",
+      "Filter clinicians by pet species and choose a clinic to request an appointment.",
     specialtyLabel: "Care area",
     speciesLabel: "Pet",
     results: (count: number) =>
       `${count} ${count === 1 ? "clinician" : "clinicians"}`,
     noResults: "No clinicians match these filters yet.",
     reset: "Clear filters",
-    available: "Available",
+    available: "Accepting requests",
     busy: "Next opening",
     years: "years of experience",
     next: "Next session",
     session: "per session",
-    book: "Continue with your pet",
+    book: "Request an appointment",
     unavailable: "Not available",
-    processEyebrow: "BEFORE THE CALL",
+    processEyebrow: "BEFORE THE VISIT",
     processTitle: "A calmer consultation starts with a little context.",
     process: [
       {
@@ -125,13 +63,13 @@ const COPY = {
         body: "Note when it started and upload a clear photo when helpful.",
       },
       {
-        title: "Join from a quiet place",
-        body: "Use stable internet and keep your pet safely within reach.",
+        title: "Prepare for transport",
+        body: "Contact the clinic to confirm your appointment and transport your pet safely.",
       },
     ],
-    paymentTitle: "Simple payment. Clear expectations.",
+    paymentTitle: "Confirm fees with your clinic.",
     paymentBody:
-      "Choose a session first. Payment and cancellation details appear before confirmation.",
+      "Your clinic confirms fees directly. Online checkout is not available.",
     dashboard: "Review your pet profile",
     filters: {
       specialty: {
@@ -153,33 +91,32 @@ const COPY = {
     },
   },
   vi: {
-    eyebrow: "TƯ VẤN THÚ Y TRỰC TUYẾN",
+    eyebrow: "ĐẶT LỊCH VỚI BÁC SĨ THÚ Y",
     title: "Bác sĩ thú y, luôn gần bạn.",
-    intro:
-      "Trao đổi với bác sĩ ngay tại nhà và chọn bước chăm sóc phù hợp cho thú cưng.",
+    intro: "Tìm bác sĩ đã được xác minh và gửi yêu cầu đặt lịch cho thú cưng.",
     findVet: "Tìm bác sĩ",
-    prepare: "Chuẩn bị cuộc gọi",
+    prepare: "Chuẩn bị buổi khám",
     imageAlt: "Bác sĩ thú y đang khám cho chó cùng chủ nuôi",
     verified: "Hồ sơ bác sĩ đã xác minh",
-    secure: "Cuộc gọi video riêng tư",
+    secure: "Yêu cầu lịch tại phòng khám",
     support: "Hướng dẫn theo dõi rõ ràng",
     directoryEyebrow: "LỊCH TƯ VẤN",
     directoryTitle: "Chọn bác sĩ phù hợp",
     directoryBody:
-      "Lọc theo chuyên khoa và loài thú cưng. Lịch trống được hiển thị trước khi bạn chọn.",
+      "Lọc bác sĩ theo loài thú cưng và chọn phòng khám để gửi yêu cầu đặt lịch.",
     specialtyLabel: "Chuyên khoa",
     speciesLabel: "Thú cưng",
     results: (count: number) => `${count} bác sĩ`,
     noResults: "Chưa có bác sĩ phù hợp với bộ lọc này.",
     reset: "Xóa bộ lọc",
-    available: "Sẵn sàng",
+    available: "Nhận yêu cầu",
     busy: "Lịch gần nhất",
     years: "năm kinh nghiệm",
     next: "Buổi gần nhất",
     session: "mỗi buổi",
-    book: "Tiếp tục với thú cưng",
+    book: "Đặt lịch khám",
     unavailable: "Chưa khả dụng",
-    processEyebrow: "TRƯỚC CUỘC GỌI",
+    processEyebrow: "TRƯỚC BUỔI KHÁM",
     processTitle: "Một chút chuẩn bị giúp buổi tư vấn rõ ràng hơn.",
     process: [
       {
@@ -191,13 +128,13 @@ const COPY = {
         body: "Ghi lại thời điểm bắt đầu và tải ảnh rõ nét khi cần.",
       },
       {
-        title: "Chọn nơi yên tĩnh",
-        body: "Dùng mạng ổn định và giữ thú cưng an toàn trong tầm tay.",
+        title: "Chuẩn bị di chuyển",
+        body: "Liên hệ phòng khám để xác nhận lịch và chuẩn bị vận chuyển thú cưng an toàn.",
       },
     ],
-    paymentTitle: "Thanh toán đơn giản. Thông tin minh bạch.",
+    paymentTitle: "Xác nhận chi phí với phòng khám.",
     paymentBody:
-      "Chọn buổi tư vấn trước. Chi phí và điều kiện hủy sẽ hiện trước khi xác nhận.",
+      "Phòng khám xác nhận chi phí trực tiếp. Thanh toán trực tuyến chưa được kích hoạt.",
     dashboard: "Xem hồ sơ thú cưng",
     filters: {
       specialty: {
@@ -235,14 +172,34 @@ export function TeleVetExperience({ locale }: { locale: PageLocale }) {
   const [specialty, setSpecialty] = useState<Specialty>("all");
   const [pet, setPet] = useState<Species>("all");
 
+  const directory = api.management.bookingOptions.useQuery();
+  const vets = useMemo(
+    () =>
+      (directory.data ?? []).flatMap((clinic) =>
+        clinic.vets.map((vet) => ({
+          id: vet.id,
+          clinicId: clinic.id,
+          name: vet.user.name ?? (locale === "vi" ? "Bác sĩ" : "Veterinarian"),
+          specialty: [] as Specialty[],
+          specialtyLabel: { vi: clinic.name, en: clinic.name },
+          experience: vet.yearsExperience,
+          available: true,
+          species: vet.specializations.map((value) =>
+            value.toLowerCase(),
+          ) as Species[],
+          languages: [] as string[],
+        })),
+      ),
+    [directory.data, locale],
+  );
   const visibleVets = useMemo(
     () =>
-      VETS.filter(
+      vets.filter(
         (vet) =>
           (specialty === "all" || vet.specialty.includes(specialty)) &&
           (pet === "all" || vet.species.includes(pet)),
       ),
-    [pet, specialty],
+    [pet, specialty, vets],
   );
 
   const clearFilters = () => {
@@ -252,6 +209,31 @@ export function TeleVetExperience({ locale }: { locale: PageLocale }) {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#efefeb] text-[#20211f] dark:bg-[#151614] dark:text-[#f1f1ed]">
+      <div className="mx-auto max-w-6xl px-4 pt-24 text-sm" role="status">
+        <p className="rounded-xl border border-black/15 p-4 dark:border-white/20">
+          {locale === "vi"
+            ? "Danh sách bác sĩ lấy từ phòng khám đã duyệt. Hiện hỗ trợ đặt lịch khám trực tiếp; gọi video và thanh toán trực tuyến chưa được kích hoạt."
+            : "These clinicians belong to approved clinics. In-person booking is available; video calls and online payment are not enabled."}
+        </p>
+        {directory.isLoading && (
+          <p className="mt-4">
+            {locale === "vi" ? "Đang tải bác sĩ…" : "Loading clinicians…"}
+          </p>
+        )}
+        {directory.isError && (
+          <p className="mt-4" role="alert">
+            {locale === "vi"
+              ? "Không tải được danh sách bác sĩ."
+              : "Could not load clinicians."}{" "}
+            <button
+              className="underline"
+              onClick={() => void directory.refetch()}
+            >
+              {locale === "vi" ? "Thử lại" : "Retry"}
+            </button>
+          </p>
+        )}
+      </div>
       <section className="px-4 pb-10 pt-28 sm:px-6 sm:pb-14 lg:px-8 lg:pt-32">
         <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:gap-16">
           <div className="max-w-xl">
@@ -336,15 +318,17 @@ export function TeleVetExperience({ locale }: { locale: PageLocale }) {
 
           <div className="mt-12 border-y border-[#d9d9d2] py-5 dark:border-[#30312e]">
             <FilterRow label={copy.specialtyLabel} icon={Stethoscope}>
-              {specialties.map((item) => (
-                <FilterButton
-                  key={item}
-                  active={specialty === item}
-                  onClick={() => setSpecialty(item)}
-                >
-                  {copy.filters.specialty[item]}
-                </FilterButton>
-              ))}
+              {specialties
+                .filter((value) => value === "all")
+                .map((item) => (
+                  <FilterButton
+                    key={item}
+                    active={specialty === item}
+                    onClick={() => setSpecialty(item)}
+                  >
+                    {copy.filters.specialty[item]}
+                  </FilterButton>
+                ))}
             </FilterRow>
             <FilterRow
               label={copy.speciesLabel}
@@ -426,24 +410,16 @@ export function TeleVetExperience({ locale }: { locale: PageLocale }) {
                   </div>
                   <div className="mt-auto flex flex-col gap-5 border-t border-[#d9d9d2] pt-6 dark:border-[#30312e] sm:mt-7 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p className="flex items-center gap-1.5 text-xs text-[#62635f] dark:text-[#b6b7b2]">
-                        <Clock3 className="h-3.5 w-3.5" />
-                        {copy.next}: {vet.nextSlot[locale]}
-                      </p>
-                      <p className="mt-2 text-lg font-semibold">
-                        {vet.price.toLocaleString(
-                          locale === "vi" ? "vi-VN" : "en-US",
-                        )}
-                        ₫{" "}
-                        <span className="text-xs font-normal text-[#62635f] dark:text-[#b6b7b2]">
-                          / {copy.session}
-                        </span>
+                      <p className="text-sm text-[#62635f] dark:text-[#b6b7b2]">
+                        {locale === "vi"
+                          ? "Phòng khám xác nhận thời gian và chi phí sau khi nhận yêu cầu."
+                          : "The clinic confirms the time and fee after receiving your request."}
                       </p>
                     </div>
                     {vet.available ? (
                       <Link
                         id={`book-vet-${vet.id}`}
-                        href="/dashboard/pets"
+                        href={`/dashboard/appointments?clinicId=${encodeURIComponent(vet.clinicId)}&vetId=${encodeURIComponent(vet.id)}`}
                         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#20211f] px-4 text-sm font-semibold text-[#f8f8f5] transition-colors hover:bg-[#b9473e] dark:bg-[#ef7569] dark:text-[#151614] dark:hover:bg-[#f08b82]"
                       >
                         <Video className="h-4 w-4" />

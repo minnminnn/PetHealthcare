@@ -5,7 +5,7 @@ import {
   clinicProcedure,
 } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { ClinicStatus, Species } from "@prisma/client";
+import { Role, ClinicStatus, Species } from "@prisma/client";
 import { env } from "@/env";
 import { discoverClinics } from "@/server/services/clinic-discovery";
 import { suggestLocations } from "@/server/services/mapbox-geocoding";
@@ -238,7 +238,7 @@ export const clinicsRouter = createTRPCRouter({
         where: { id: input.clinicId },
       });
       if (!clinic) throw new TRPCError({ code: "NOT_FOUND" });
-      if (clinic.adminUserId !== ctx.session.user.id) {
+      if (clinic.adminUserId !== ctx.session.user.id && ctx.session.user.role !== Role.SYSTEM_ADMIN) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       return ctx.db.clinic.update({

@@ -1,0 +1,31 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: petcare_test
+          POSTGRES_USER: petcare
+          POSTGRES_PASSWORD: ci_only_password
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U petcare -d petcare_test" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://petcare:ci_only_password@localhost:5432/petcare_test
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-only-secret-not-used-for-any-deployment-1234
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run db:deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { google } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
 import { NextResponse, type NextRequest } from "next/server";
 import { ZodError } from "zod";
 import { env } from "@/env";
@@ -12,7 +12,9 @@ import {
   resolveAIModel,
   triageRequestSchema,
 } from "@/server/services/petcare-ai";
-
+const groq = createGroq({
+  apiKey: env.GROQ_API_KEY,
+});
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
@@ -30,6 +32,7 @@ function requestIdentity(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!env.GROQ_API_KEY) return NextResponse.json({ error: "AI is not configured / Chưa cấu hình AI" }, { status: 503 });
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 64_000) {
     return NextResponse.json(
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
         : "Reply in English unless the user clearly asks for another language.";
 
     const result = await streamText({
-      model: google(resolveAIModel(env.GOOGLE_GENERATIVE_AI_MODEL)),
+      model: groq(resolveAIModel(env.GROQ_MODEL)),
       system: `${PETCARE_SYSTEM_PROMPT}\n\n${languageInstruction}\n\n${clinicContext}`,
       messages: [
         ...input.history.map((message) => ({
@@ -107,6 +110,7 @@ async function getClinicContext(location: {
   const candidates = await db.clinic.findMany({
     where: {
       isVerified: true,
+      NOT: { id: { startsWith: "petcare-demo-" } },
       latitude: { not: null },
       longitude: { not: null },
     },

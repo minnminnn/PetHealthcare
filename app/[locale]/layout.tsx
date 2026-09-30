@@ -1,4 +1,3 @@
-
 import "@/styles/globals.css";
 import "leaflet/dist/leaflet.css";
 import { type Metadata, type Viewport } from "next";
@@ -11,7 +10,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { SOSButton } from "@/components/layout/SOSButton";
 import { locales, type Locale } from "@/i18n";
-
 
 // ─── Static params for next-intl ──────────────────────────────────────────────
 export function generateStaticParams() {
@@ -87,49 +85,36 @@ export default async function RootLayout({
 
   const session = await auth();
 
-
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        <link
-          rel="preload"
-          href="/fonts/inter-variable.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://utfs.io" />
-      </head>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <SessionProvider session={session}>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <TRPCReactProvider>
-              {/* ── Global Navigation ────────────────────────── */}
-              <Navbar locale={locale as Locale} />
+    <>
+      <SessionProvider session={session}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <TRPCReactProvider>
+            {/* ── Global Navigation ────────────────────────── */}
+            <Navbar locale={locale as Locale} />
 
-              {/* ── Page Content ─────────────────────────────── */}
-              <main className="min-h-[100dvh]">{children}</main>
+            {/* ── Page Content ─────────────────────────────── */}
+            <main className="min-h-[100dvh]">{children}</main>
 
-              {/* ── Persistent SOS Emergency FAB ─────────────── */}
-              <SOSButton />
+            {/* ── Persistent SOS Emergency FAB ─────────────── */}
+            <SOSButton />
 
-              {/* ── Toast Notifications ───────────────────────── */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  style: {
-                    background: "#f3f3f0",
-                    color: "#20211f",
-                    border: "1px solid #d7d7d1",
-                    borderRadius: "12px",
-                    fontFamily: "InterVariable, sans-serif",
-                  },
-                }}
-              />
-            </TRPCReactProvider>
-          </NextIntlClientProvider>
-        </SessionProvider>
-      </body>
-    </html>
+            {/* ── Toast Notifications ───────────────────────── */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: "#f3f3f0",
+                  color: "#20211f",
+                  border: "1px solid #d7d7d1",
+                  borderRadius: "12px",
+                  fontFamily: "InterVariable, sans-serif",
+                },
+              }}
+            />
+          </TRPCReactProvider>
+        </NextIntlClientProvider>
+      </SessionProvider>
+    </>
   );
 }

@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { Role } from "@prisma/client";
 import { z } from "zod";
+import { refreshAccountToken } from "./domain/session";
 import { normalizeEmail } from "@/lib/auth/validation";
 
 const credentialsSchema = z.object({
@@ -15,17 +16,22 @@ const credentialsSchema = z.object({
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
+  // Auth.js pins request URLs to AUTH_URL/NEXTAUTH_URL; trust only an explicitly configured origin.
+  trustHost: process.env.AUTH_URL || process.env.NEXTAUTH_URL ? true : undefined,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/vi/login",
     error: "/vi/login",
   },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          }),
+        ]
+      : []),
     Credentials({
       name: "credentials",
       credentials: {
@@ -67,29 +73,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: Role }).role ?? Role.OWNER;
-      }
-
-      // Allow role updates on `update()` call
-      if (trigger === "update" && session?.role) {
-        token.role = session.role as Role;
-      }
-
-      // Refresh role from DB on each request (important for RBAC)
-      if (token.id && !user) {
-        const dbUser = await db.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true, isActive: true },
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-        }
-      }
-
-      return token;
+    async jwt({ token, user }) {
+      if (user) token.id = user.id;
+      if (!token.id) return null;
+      const account = await db.user.findUnique({
+        where: { id: token.id as string },
+        select: { role: true, isActive: true },
+      });
+      return refreshAccountToken(token, account);
     },
     async session({ session, token }) {
       if (token) {

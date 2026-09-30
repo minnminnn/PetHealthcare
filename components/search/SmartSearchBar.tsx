@@ -9,6 +9,7 @@ import {
   Loader2, ChevronRight, Star, Navigation
 } from "lucide-react";
 import { api } from "@/trpc/react";
+import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import type { Locale } from "@/i18n";
 import { Species } from "@prisma/client";
@@ -68,7 +69,8 @@ export function SmartSearchBar({ locale, compact = false }: SmartSearchBarProps)
       }
     );
 
-  const handleGeoToggle = useCallback(() => {
+  const handleGeoToggle = useCallback(async () => {
+    if (isGeoLoading) return;
     if (useGeo) {
       setUseGeo(false);
       setCoords(null);
@@ -76,24 +78,20 @@ export function SmartSearchBar({ locale, compact = false }: SmartSearchBarProps)
     }
 
     setIsGeoLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setUseGeo(true);
-        setIsGeoLoading(false);
-      },
-      () => {
-        setIsGeoLoading(false);
-        alert(t("geoError" as keyof ReturnType<typeof t>));
-      },
-      { timeout: 8000 }
-    );
-  }, [useGeo, t]);
+    try {
+      setCoords(await getCurrentLocation());
+      setUseGeo(true);
+    } catch (error) {
+      alert(getLocationErrorMessage(error, locale));
+    } finally {
+      setIsGeoLoading(false);
+    }
+  }, [useGeo, isGeoLoading, locale]);
 
   const handleSearch = useCallback(
     (searchQuery?: string) => {
       const q = searchQuery ?? query;
-      if (!q.trim() && !selectedSpecies) return;
+      if (!q.trim() && !selectedSpecies && !coords) return;
 
       const params = new URLSearchParams();
       if (q.trim()) params.set("q", q.trim());
@@ -106,7 +104,7 @@ export function SmartSearchBar({ locale, compact = false }: SmartSearchBarProps)
       router.push(`/clinics?${params.toString()}`);
       setIsFocused(false);
     },
-    [query, selectedSpecies, coords, locale, router]
+    [query, selectedSpecies, coords, router]
   );
 
   const showDropdown = isFocused && (query.length >= 2 || (!query && !compact));
@@ -169,6 +167,7 @@ export function SmartSearchBar({ locale, compact = false }: SmartSearchBarProps)
         {/* Geo toggle */}
         <button
           onClick={handleGeoToggle}
+          disabled={isGeoLoading}
           className={`flex-shrink-0 p-1.5 rounded-lg transition-all duration-200 ${
             useGeo
               ? "bg-primary-100 text-primary-600"

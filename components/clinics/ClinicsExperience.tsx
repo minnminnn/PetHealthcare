@@ -23,6 +23,7 @@ import {
   Navigation,
 } from "lucide-react";
 import { api } from "@/trpc/react";
+import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import { ClinicStatus as PrismaClinicStatus, Species as PrismaSpecies } from "@prisma/client";
 
@@ -70,7 +71,6 @@ const COPY = {
     searchLabel: "Tìm kiếm phòng khám",
     locationHint: "Chọn một địa điểm để tìm phòng khám gần đó",
     useLocation: "Dùng vị trí hiện tại",
-    locationError: "Không thể truy cập vị trí của bạn.",
     loading: "Đang tìm phòng khám đã xác minh…",
     filters: "Bộ lọc",
     species: "Loài thú cưng",
@@ -103,7 +103,6 @@ const COPY = {
     searchLabel: "Search clinics",
     locationHint: "Choose a place to find clinics nearby",
     useLocation: "Use current location",
-    locationError: "We could not access your location.",
     loading: "Finding verified clinics…",
     filters: "Filters",
     species: "Pet type",
@@ -272,23 +271,20 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
     setSort("distance");
   };
 
-  const useCurrentLocation = () => {
+  const useCurrentLocation = async () => {
+    if (isLocating) return;
     setLocationError("");
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setOrigin({ lat: coords.latitude, lng: coords.longitude });
-        setSelectedPlace(copy.useLocation);
-        setQuery(copy.useLocation);
-        setSort("distance");
-        setIsLocating(false);
-      },
-      () => {
-        setLocationError(copy.locationError);
-        setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 300_000 },
-    );
+    try {
+      setOrigin(await getCurrentLocation());
+      setSelectedPlace(copy.useLocation);
+      setQuery(copy.useLocation);
+      setSort("distance");
+    } catch (error) {
+      setLocationError(getLocationErrorMessage(error, locale));
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   return (
@@ -609,7 +605,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                               {clinic.isVerified && (
                                 <span className="inline-flex items-center gap-1.5 text-[#5d5f59] dark:text-[#c6c7c0]">
                                   <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
-                                  {copy.verified}
+                                  {clinic.name.startsWith("[DEMO]") ? "Demo" : copy.verified}
                                 </span>
                               )}
                             </div>
@@ -624,14 +620,16 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
 
                         <div className="mt-5 flex items-center justify-end gap-3 sm:pl-[12.5rem]">
                           <a
-                            href={`tel:${clinic.phone.replace(/\s/g, "")}`}
+                            href={clinic.phone ? `tel:${clinic.phone.replace(/\s/g, "")}` : undefined}
+                            aria-disabled={!clinic.phone}
                             className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#b4b6af] px-4 text-sm font-bold text-[#393a37] transition hover:border-[#b9473e] hover:text-[#b9473e] active:translate-y-px dark:border-white/20 dark:text-[#d6d7d0] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
                           >
                             <Phone className="h-4 w-4" strokeWidth={1.8} />
-                            {copy.call}
+                            {clinic.phone ? copy.call : (locale === "vi" ? "Demo — không gọi" : "Demo — no phone")}
                           </a>
                           <a
-                            href={clinic.website ?? `tel:${clinic.phone.replace(/[^+\d]/g, "")}`}
+                            href={clinic.website ?? (clinic.phone ? `tel:${clinic.phone.replace(/[^+\d]/g, "")}` : undefined)}
+                            aria-disabled={!clinic.website && !clinic.phone}
                             target={clinic.website ? "_blank" : undefined}
                             rel={clinic.website ? "noreferrer" : undefined}
                             className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#20211f] px-4 text-sm font-bold text-[#f5f5ef] transition hover:-translate-y-0.5 hover:bg-[#353633] active:translate-y-px dark:bg-[#d85f53] dark:text-[#1a1b19] dark:hover:bg-[#ef7569]"

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const DEFAULT_AI_MODEL = "gemini-3.6-flash";
+const DEFAULT_AI_MODEL = "openai/gpt-oss-20b";
 
 export function resolveAIModel(value: string | undefined) {
   return value?.trim() || DEFAULT_AI_MODEL;
@@ -39,7 +39,9 @@ export interface AIClinicContext {
 }
 
 export function buildClinicContext(clinics: readonly AIClinicContext[]) {
-  const verifiedClinics = clinics.filter((clinic) => clinic.isVerified);
+  const verifiedClinics = clinics.filter(
+    (clinic) => clinic.isVerified && !clinic.name.startsWith("[DEMO]"),
+  );
   if (!verifiedClinics.length) {
     return "No verified clinic results are available for the user's current location. Do not name or invent a clinic. Ask the user to use the clinic finder or share their location.";
   }

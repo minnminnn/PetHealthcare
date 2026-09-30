@@ -9,8 +9,8 @@ import {
 } from "./petcare-ai";
 
 test("AI model resolution never passes an absent model ID to the provider", () => {
-  assert.equal(resolveAIModel(undefined), "gemini-3.6-flash");
-  assert.equal(resolveAIModel("  "), "gemini-3.6-flash");
+  assert.equal(resolveAIModel(undefined), "openai/gpt-oss-20b");
+  assert.equal(resolveAIModel("  "), "openai/gpt-oss-20b");
   assert.equal(resolveAIModel("gemini-custom"), "gemini-custom");
 });
 
@@ -95,4 +95,14 @@ test("rate limiter blocks excess requests and resets after its window", () => {
 
   now = 61_001;
   assert.equal(limiter.check("user-1").allowed, true);
+});
+
+test("fictional demo clinics are not presented as verified care options to AI", () => {
+  const context = buildClinicContext([{
+    name: "[DEMO] PetCare Đa khoa Hà Nội", address: "Địa chỉ mô phỏng", phone: "",
+    city: "Hà Nội", status: "EMERGENCY", is24h: true, isVerified: true,
+    isExoticSpec: true, specializations: ["DOG", "CAT"], distanceKm: 0.1,
+  }]);
+  assert.doesNotMatch(context, /PetCare Đa khoa/);
+  assert.match(context, /Do not name or invent a clinic/);
 });

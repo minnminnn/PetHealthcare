@@ -12,18 +12,18 @@ export const env = createEnv({
         ? z.string()
         : z.string().optional(),
     NEXTAUTH_URL: z.preprocess(
-      (str) => process.env.VERCEL_URL ?? str,
+      (str) => process.env.VERCEL_URL ?? str ?? "http://localhost:3000",
       process.env.VERCEL ? z.string() : z.string().url(),
     ),
     // OAuth
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
     // UploadThing
-    UPLOADTHING_SECRET: z.string(),
-    UPLOADTHING_APP_ID: z.string(),
+    UPLOADTHING_SECRET: z.string().optional(),
+    UPLOADTHING_APP_ID: z.string().optional(),
     // AI
-    GOOGLE_GENERATIVE_AI_API_KEY: z.string(),
-    GOOGLE_GENERATIVE_AI_MODEL: z.string().optional(),
+    GROQ_API_KEY: z.string().min(1).optional(),
+GROQ_MODEL: z.string().optional(),
     // Inngest
     INNGEST_EVENT_KEY: z.string().optional(),
     INNGEST_SIGNING_KEY: z.string().optional(),
@@ -57,8 +57,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     UPLOADTHING_SECRET: process.env.UPLOADTHING_SECRET,
     UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
-    GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    GOOGLE_GENERATIVE_AI_MODEL: process.env.GOOGLE_GENERATIVE_AI_MODEL,
+    GROQ_API_KEY: process.env.GROQ_API_KEY,
+    GROQ_MODEL: process.env.GROQ_MODEL,
     INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
@@ -76,6 +76,6 @@ export const env = createEnv({
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   },
-  skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+  skipValidation: process.env.SKIP_ENV_VALIDATION === "1" || process.env.SKIP_ENV_VALIDATION === "true",
   emptyStringAsUndefined: true,
 });

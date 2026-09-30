@@ -1,8 +1,8 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AccountLink } from "@/components/auth/AccountLink";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -37,6 +37,12 @@ function getSafeDestination(locale: string) {
 }
 
 export default function LoginPage() {
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    getProviders()
+      .then((providers) => setGoogleEnabled(Boolean(providers?.google)))
+      .catch(() => setGoogleEnabled(false));
+  }, []);
   const t = useTranslations("auth");
   const locale = useLocale();
   const [formState, setFormState] = useState<LoginFormState>({
@@ -166,11 +172,13 @@ export default function LoginPage() {
 
         <Divider label={t("or")} />
 
-        <SocialButtons
-          googleLabel={t("login.withGoogle")}
-          onGoogleClick={handleGoogleSignIn}
-          disabled={formState.isLoading}
-        />
+        {googleEnabled && (
+          <SocialButtons
+            googleLabel={t("login.withGoogle")}
+            onGoogleClick={handleGoogleSignIn}
+            disabled={formState.isLoading}
+          />
+        )}
 
         <AccountLink
           href="/register"

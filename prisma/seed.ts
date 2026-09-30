@@ -23,6 +23,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
+  if (process.env.NODE_ENV === "production") throw new Error("Legacy demo seed is disabled in production");
   console.log("🌱 Starting database seed...");
 
   // ── Enable PostgreSQL Extensions ───────────────────────────────────────────

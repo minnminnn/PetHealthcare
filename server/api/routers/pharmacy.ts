@@ -9,14 +9,16 @@ export const pharmacyRouter = createTRPCRouter({
       query: z.string().optional(),
       species: z.nativeEnum(Species).optional(),
       requiresRx: z.boolean().optional(),
-      page: z.number().default(1),
-      limit: z.number().default(12),
+      category: z.string().max(100).optional(),
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().min(1).max(100).default(12),
     }))
     .query(async ({ ctx, input }) => {
-      const { query, species, requiresRx, page, limit } = input;
+      const { query, species, requiresRx, page, limit, category } = input;
       const skip = (page - 1) * limit;
 
       const where = {
+        ...(category === "toxic" ? { toxicAlerts: { some: {} } } : category ? { category } : {}),
         ...(query && {
           OR: [
             { name: { contains: query, mode: "insensitive" as const } },
@@ -90,8 +92,8 @@ export const pharmacyRouter = createTRPCRouter({
         }>
       >(
         `
-        SELECT id, name, toxic_for AS "toxicFor", severity,
-               symptoms, first_aid_steps AS "firstAidSteps", antidote,
+        SELECT id, name, "toxicFor", severity,
+               symptoms, "firstAidSteps", antidote,
                similarity(unaccent(lower(name)), unaccent(lower($1))) AS similarity
         FROM toxic_substances
         WHERE similarity(unaccent(lower(name)), unaccent(lower($1))) > 0.2

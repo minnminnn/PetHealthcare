@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, clinicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { requireClinicAccess } from "@/server/authz/clinic-access";
 import { RecordType, Role } from "@prisma/client";
 import { requirePermission, requirePetAccess } from "@/server/authz/pet-access";
 
@@ -158,7 +159,7 @@ export const medicalRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const record = await ctx.db.medicalRecord.findUnique({
         where: { id: input.recordId },
-        select: { id: true, petId: true },
+        select: { id: true, petId: true, clinicId: true, vetId: true },
       });
       if (!record) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -168,6 +169,11 @@ export const medicalRouter = createTRPCRouter({
         record.petId,
       );
       requirePermission(access.permissions, "canWriteMedicalRecords");
+      if (ctx.session.user.role !== Role.SYSTEM_ADMIN) {
+        if (!record.clinicId) throw new TRPCError({ code: "FORBIDDEN" });
+        await requireClinicAccess(ctx.db, ctx.session.user, record.clinicId);
+      }
+
 
       return ctx.db.medicalRecord.update({
         where: { id: input.recordId },

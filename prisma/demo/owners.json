@@ -1,0 +1,478 @@
+[
+  {
+    "key": "01",
+    "name": "[DEMO] Nguyễn Minh Anh",
+    "email": "owner01@petcare-demo.test",
+    "clinicKey": "01",
+    "pets": [
+      {
+        "key": "01",
+        "name": "Milo",
+        "species": "DOG",
+        "breed": "Poodle",
+        "weight": 5.2,
+        "color": "nâu",
+        "gender": "male",
+        "ageMonths": 18
+      },
+      {
+        "key": "02",
+        "name": "Miu",
+        "species": "CAT",
+        "breed": "Mèo Anh lông ngắn",
+        "weight": 4.1,
+        "color": "xám",
+        "gender": "female",
+        "ageMonths": 19
+      }
+    ]
+  },
+  {
+    "key": "02",
+    "name": "[DEMO] Trần Hoàng Nam",
+    "email": "owner02@petcare-demo.test",
+    "clinicKey": "04",
+    "pets": [
+      {
+        "key": "03",
+        "name": "Kiwi",
+        "species": "BIRD",
+        "breed": "Vẹt yến phụng",
+        "weight": 0.04,
+        "color": "xanh",
+        "gender": "male",
+        "ageMonths": 20
+      },
+      {
+        "key": "04",
+        "name": "Bông",
+        "species": "RABBIT",
+        "breed": "Thỏ Hà Lan",
+        "weight": 1.7,
+        "color": "trắng",
+        "gender": "female",
+        "ageMonths": 21
+      }
+    ]
+  },
+  {
+    "key": "03",
+    "name": "[DEMO] Lê Ngọc Mai",
+    "email": "owner03@petcare-demo.test",
+    "clinicKey": "07",
+    "pets": [
+      {
+        "key": "05",
+        "name": "Hạt Dẻ",
+        "species": "HAMSTER",
+        "breed": "Hamster Syrian",
+        "weight": 0.12,
+        "color": "vàng",
+        "gender": "male",
+        "ageMonths": 22
+      },
+      {
+        "key": "06",
+        "name": "Rồng",
+        "species": "REPTILE",
+        "breed": "Rồng Úc",
+        "weight": 0.45,
+        "color": "vàng cát",
+        "gender": "female",
+        "ageMonths": 23
+      }
+    ]
+  },
+  {
+    "key": "04",
+    "name": "[DEMO] Phạm Gia Huy",
+    "email": "owner04@petcare-demo.test",
+    "clinicKey": "10",
+    "pets": [
+      {
+        "key": "07",
+        "name": "Bọt",
+        "species": "FISH",
+        "breed": "Cá vàng",
+        "weight": 0.03,
+        "color": "cam",
+        "gender": "male",
+        "ageMonths": 24
+      },
+      {
+        "key": "08",
+        "name": "Slink",
+        "species": "FERRET",
+        "breed": "Chồn sương",
+        "weight": 1.1,
+        "color": "nâu trắng",
+        "gender": "female",
+        "ageMonths": 25
+      }
+    ]
+  },
+  {
+    "key": "05",
+    "name": "[DEMO] Hoàng Thu Hà",
+    "email": "owner05@petcare-demo.test",
+    "clinicKey": "13",
+    "pets": [
+      {
+        "key": "09",
+        "name": "Bắp",
+        "species": "GUINEA_PIG",
+        "breed": "Bọ ú lông ngắn",
+        "weight": 0.9,
+        "color": "tam thể",
+        "gender": "male",
+        "ageMonths": 26
+      },
+      {
+        "key": "10",
+        "name": "Gai",
+        "species": "OTHER",
+        "breed": "Nhím kiểng",
+        "weight": 0.4,
+        "color": "nâu",
+        "gender": "female",
+        "ageMonths": 27
+      }
+    ]
+  },
+  {
+    "key": "06",
+    "name": "[DEMO] Vũ Đức Minh",
+    "email": "owner06@petcare-demo.test",
+    "clinicKey": "16",
+    "pets": [
+      {
+        "key": "11",
+        "name": "Bơ",
+        "species": "DOG",
+        "breed": "Corgi",
+        "weight": 11.3,
+        "color": "vàng trắng",
+        "gender": "male",
+        "ageMonths": 28
+      },
+      {
+        "key": "12",
+        "name": "Mun",
+        "species": "CAT",
+        "breed": "Mèo ta",
+        "weight": 3.8,
+        "color": "đen",
+        "gender": "female",
+        "ageMonths": 29
+      }
+    ]
+  },
+  {
+    "key": "07",
+    "name": "[DEMO] Đặng Bảo Ngọc",
+    "email": "owner07@petcare-demo.test",
+    "clinicKey": "19",
+    "pets": [
+      {
+        "key": "13",
+        "name": "Nắng",
+        "species": "BIRD",
+        "breed": "Vẹt Cockatiel",
+        "weight": 0.09,
+        "color": "vàng xám",
+        "gender": "male",
+        "ageMonths": 30
+      },
+      {
+        "key": "14",
+        "name": "Mây",
+        "species": "RABBIT",
+        "breed": "Thỏ tai cụp",
+        "weight": 2.1,
+        "color": "xám",
+        "gender": "female",
+        "ageMonths": 31
+      }
+    ]
+  },
+  {
+    "key": "08",
+    "name": "[DEMO] Bùi Quang Huy",
+    "email": "owner08@petcare-demo.test",
+    "clinicKey": "22",
+    "pets": [
+      {
+        "key": "15",
+        "name": "Mochi",
+        "species": "HAMSTER",
+        "breed": "Hamster Winter White",
+        "weight": 0.04,
+        "color": "trắng",
+        "gender": "male",
+        "ageMonths": 32
+      },
+      {
+        "key": "16",
+        "name": "Rêu",
+        "species": "REPTILE",
+        "breed": "Rùa cảnh",
+        "weight": 0.8,
+        "color": "xanh nâu",
+        "gender": "female",
+        "ageMonths": 33
+      }
+    ]
+  },
+  {
+    "key": "09",
+    "name": "[DEMO] Đỗ Phương Linh",
+    "email": "owner09@petcare-demo.test",
+    "clinicKey": "01",
+    "pets": [
+      {
+        "key": "17",
+        "name": "Lucky",
+        "species": "DOG",
+        "breed": "Golden Retriever",
+        "weight": 27.5,
+        "color": "vàng",
+        "gender": "male",
+        "ageMonths": 34
+      },
+      {
+        "key": "18",
+        "name": "Sữa",
+        "species": "CAT",
+        "breed": "Mèo Ragdoll",
+        "weight": 4.7,
+        "color": "trắng kem",
+        "gender": "female",
+        "ageMonths": 35
+      }
+    ]
+  },
+  {
+    "key": "10",
+    "name": "[DEMO] Hồ Nhật Minh",
+    "email": "owner10@petcare-demo.test",
+    "clinicKey": "04",
+    "pets": [
+      {
+        "key": "19",
+        "name": "Đốm",
+        "species": "DOG",
+        "breed": "Chó ta",
+        "weight": 14.2,
+        "color": "trắng đốm",
+        "gender": "male",
+        "ageMonths": 36
+      },
+      {
+        "key": "20",
+        "name": "Cacao",
+        "species": "CAT",
+        "breed": "Mèo Ba Tư",
+        "weight": 4.3,
+        "color": "nâu",
+        "gender": "female",
+        "ageMonths": 37
+      }
+    ]
+  },
+  {
+    "key": "11",
+    "name": "[DEMO] Ngô Khánh Vy",
+    "email": "owner11@petcare-demo.test",
+    "clinicKey": "07",
+    "pets": [
+      {
+        "key": "21",
+        "name": "Milo 11",
+        "species": "DOG",
+        "breed": "Poodle",
+        "weight": 5.2,
+        "color": "nâu",
+        "gender": "male",
+        "ageMonths": 38
+      },
+      {
+        "key": "22",
+        "name": "Miu 11",
+        "species": "CAT",
+        "breed": "Mèo Anh lông ngắn",
+        "weight": 4.1,
+        "color": "xám",
+        "gender": "female",
+        "ageMonths": 39
+      }
+    ]
+  },
+  {
+    "key": "12",
+    "name": "[DEMO] Dương Tuấn Kiệt",
+    "email": "owner12@petcare-demo.test",
+    "clinicKey": "10",
+    "pets": [
+      {
+        "key": "23",
+        "name": "Kiwi 12",
+        "species": "BIRD",
+        "breed": "Vẹt yến phụng",
+        "weight": 0.04,
+        "color": "xanh",
+        "gender": "male",
+        "ageMonths": 40
+      },
+      {
+        "key": "24",
+        "name": "Bông 12",
+        "species": "RABBIT",
+        "breed": "Thỏ Hà Lan",
+        "weight": 1.7,
+        "color": "trắng",
+        "gender": "female",
+        "ageMonths": 41
+      }
+    ]
+  },
+  {
+    "key": "13",
+    "name": "[DEMO] Lý Thanh Trúc",
+    "email": "owner13@petcare-demo.test",
+    "clinicKey": "13",
+    "pets": [
+      {
+        "key": "25",
+        "name": "Hạt Dẻ 13",
+        "species": "HAMSTER",
+        "breed": "Hamster Syrian",
+        "weight": 0.12,
+        "color": "vàng",
+        "gender": "male",
+        "ageMonths": 42
+      },
+      {
+        "key": "26",
+        "name": "Rồng 13",
+        "species": "REPTILE",
+        "breed": "Rồng Úc",
+        "weight": 0.45,
+        "color": "vàng cát",
+        "gender": "female",
+        "ageMonths": 43
+      }
+    ]
+  },
+  {
+    "key": "14",
+    "name": "[DEMO] Mai Hải Đăng",
+    "email": "owner14@petcare-demo.test",
+    "clinicKey": "16",
+    "pets": [
+      {
+        "key": "27",
+        "name": "Bọt 14",
+        "species": "FISH",
+        "breed": "Cá vàng",
+        "weight": 0.03,
+        "color": "cam",
+        "gender": "male",
+        "ageMonths": 44
+      },
+      {
+        "key": "28",
+        "name": "Slink 14",
+        "species": "FERRET",
+        "breed": "Chồn sương",
+        "weight": 1.1,
+        "color": "nâu trắng",
+        "gender": "female",
+        "ageMonths": 45
+      }
+    ]
+  },
+  {
+    "key": "15",
+    "name": "[DEMO] Võ Thảo Nhi",
+    "email": "owner15@petcare-demo.test",
+    "clinicKey": "19",
+    "pets": [
+      {
+        "key": "29",
+        "name": "Bắp 15",
+        "species": "GUINEA_PIG",
+        "breed": "Bọ ú lông ngắn",
+        "weight": 0.9,
+        "color": "tam thể",
+        "gender": "male",
+        "ageMonths": 46
+      },
+      {
+        "key": "30",
+        "name": "Gai 15",
+        "species": "OTHER",
+        "breed": "Nhím kiểng",
+        "weight": 0.4,
+        "color": "nâu",
+        "gender": "female",
+        "ageMonths": 47
+      }
+    ]
+  },
+  {
+    "key": "16",
+    "name": "[DEMO] Phan Anh Khoa",
+    "email": "owner16@petcare-demo.test",
+    "clinicKey": "22",
+    "pets": [
+      {
+        "key": "31",
+        "name": "Bơ 16",
+        "species": "DOG",
+        "breed": "Corgi",
+        "weight": 11.3,
+        "color": "vàng trắng",
+        "gender": "male",
+        "ageMonths": 18
+      },
+      {
+        "key": "32",
+        "name": "Mun 16",
+        "species": "CAT",
+        "breed": "Mèo ta",
+        "weight": 3.8,
+        "color": "đen",
+        "gender": "female",
+        "ageMonths": 19
+      }
+    ]
+  },
+  {
+    "key": "17",
+    "name": "[DEMO] Đinh Diệu Linh",
+    "email": "owner17@petcare-demo.test",
+    "clinicKey": "01",
+    "pets": [
+      {
+        "key": "33",
+        "name": "Nắng 17",
+        "species": "BIRD",
+        "breed": "Vẹt Cockatiel",
+        "weight": 0.09,
+        "color": "vàng xám",
+        "gender": "male",
+        "ageMonths": 20
+      },
+      {
+        "key": "34",
+        "name": "Mây 17",
+        "species": "RABBIT",
+        "breed": "Thỏ tai cụp",
+        "weight": 2.1,
+        "color": "xám",
+        "gender": "female",
+        "ageMonths": 21
+      }
+    ]
+  }
+]

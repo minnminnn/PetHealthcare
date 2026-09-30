@@ -340,7 +340,7 @@ export default function BloodDonorPage({ params: { locale } }: PageProps) {
                   {copy.recordsBody}
                 </p>
                 <Link
-                  href="/dashboard/pets"
+                  href="/dashboard/donors"
                   className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#20211f] px-4 text-sm font-semibold text-[#f8f8f5] transition-colors hover:bg-[#b9473e] dark:bg-[#ef7569] dark:text-[#151614] dark:hover:bg-[#f08b82]"
                 >
                   {copy.recordsCta}

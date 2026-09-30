@@ -9,15 +9,21 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
+    "db:demo": "tsx prisma/seed-demo.ts",
     "db:studio": "prisma studio",
     "dev": "next dev --turbo",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts lib/*.test.ts server/services/*.test.ts server/domain/*.test.ts",
+    "db:deploy": "prisma migrate deploy",
+    "db:admin": "tsx scripts/create-admin.ts",
+    "clinics:match": "tsx scripts/match-clinic-names.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^0.0.52",
+    "@ai-sdk/groq": "0.0.3",
     "@auth/prisma-adapter": "^2.4.2",
     "@base-ui/react": "^1.8.0",
     "@gsap/react": "^2.1.2",

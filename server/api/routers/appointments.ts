@@ -5,9 +5,16 @@ import {
   clinicProcedure,
 } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { AppointmentStatus, ConsultationType, Role } from "@prisma/client";
+import { AppointmentStatus, Prisma, Role } from "@prisma/client";
 import { requireClinicAccess } from "@/server/authz/clinic-access";
-import { requirePermission, requirePetAccess } from "@/server/authz/pet-access";
+import {
+  activeAppointmentStatuses,
+  assertFutureBooking,
+  assertTransition,
+  bookingSchema,
+  clinicDayRange,
+  overlaps,
+} from "@/server/domain/appointments";
 
 export const appointmentsRouter = createTRPCRouter({
   /** List appointments for current user (owner view) */
@@ -15,8 +22,8 @@ export const appointmentsRouter = createTRPCRouter({
     .input(
       z.object({
         status: z.nativeEnum(AppointmentStatus).optional(),
-        page: z.number().default(1),
-        limit: z.number().default(10),
+        page: z.number().int().min(1).default(1),
+        limit: z.number().int().min(1).max(100).default(10),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -49,21 +56,21 @@ export const appointmentsRouter = createTRPCRouter({
 
   /** Clinic daily queue */
   clinicQueue: clinicProcedure
-    .input(z.object({ clinicId: z.string(), date: z.date().optional() }))
+    .input(
+      z.object({
+        clinicId: z.string(),
+        day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       await requireClinicAccess(ctx.db, ctx.session.user, input.clinicId);
 
-      const targetDate = input.date ?? new Date();
-      const dayStart = new Date(targetDate);
-      dayStart.setHours(0, 0, 0, 0);
-      const dayEnd = new Date(targetDate);
-      dayEnd.setHours(23, 59, 59, 999);
+      const dateRange = clinicDayRange(input.day);
 
       return ctx.db.appointment.findMany({
         where: {
           clinicId: input.clinicId,
-          scheduledAt: { gte: dayStart, lte: dayEnd },
-          status: { notIn: [AppointmentStatus.CANCELLED] },
+          scheduledAt: dateRange,
         },
         include: {
           pet: true,
@@ -74,48 +81,132 @@ export const appointmentsRouter = createTRPCRouter({
       });
     }),
 
-  /** Book an appointment */
+  /** Serializable transactions prevent two concurrent requests taking the same slot. */
   book: protectedProcedure
-    .input(
-      z.object({
-        petId: z.string(),
-        clinicId: z.string(),
-        vetId: z.string().optional(),
-        type: z
-          .nativeEnum(ConsultationType)
-          .default(ConsultationType.IN_PERSON),
-        scheduledAt: z.date(),
-        durationMinutes: z.number().default(30),
-        chiefComplaint: z.string().max(500).optional(),
-      }),
-    )
+    .input(bookingSchema)
     .mutation(async ({ ctx, input }) => {
-      // Verify pet ownership
-      const pet = await ctx.db.pet.findUnique({ where: { id: input.petId } });
-      if (!pet || pet.ownerId !== ctx.session.user.id) {
-        throw new TRPCError({ code: "FORBIDDEN" });
+      assertFutureBooking(input.scheduledAt);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          return await ctx.db.$transaction(
+            async (tx) => {
+              const pet = await tx.pet.findFirst({
+                where: {
+                  id: input.petId,
+                  ownerId: ctx.session.user.id,
+                  isActive: true,
+                },
+              });
+              if (!pet)
+                throw new TRPCError({
+                  code: "NOT_FOUND",
+                  message: "Pet not found",
+                });
+              const clinic = await tx.clinic.findFirst({
+                where: {
+                  id: input.clinicId,
+                  isVerified: true,
+                  admin: { isActive: true },
+                },
+              });
+              if (!clinic)
+                throw new TRPCError({
+                  code: "NOT_FOUND",
+                  message: "Clinic not found",
+                });
+              if (
+                clinic.specializations.length &&
+                !clinic.specializations.includes(pet.species)
+              ) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message:
+                    "Clinic does not support this species / Phòng khám không hỗ trợ loài này",
+                });
+              }
+              if (input.vetId) {
+                const vet = await tx.vet.findFirst({
+                  where: {
+                    id: input.vetId,
+                    clinicId: input.clinicId,
+                    isVerified: true,
+                    user: { isActive: true },
+                  },
+                });
+                if (!vet)
+                  throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message:
+                      "Vet does not belong to this clinic / Bác sĩ không thuộc phòng khám",
+                  });
+                if (
+                  vet.specializations.length &&
+                  !vet.specializations.includes(pet.species)
+                )
+                  throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message:
+                      "Vet does not support this species / Bác sĩ không hỗ trợ loài này",
+                  });
+              }
+              const candidates = await tx.appointment.findMany({
+                where: {
+                  status: { in: activeAppointmentStatuses },
+                  scheduledAt: {
+                    lt: new Date(
+                      input.scheduledAt.getTime() +
+                        input.durationMinutes * 60_000,
+                    ),
+                  },
+                  OR: [
+                    { petId: input.petId },
+                    ...(input.vetId ? [{ vetId: input.vetId }] : []),
+                  ],
+                },
+                select: { scheduledAt: true, durationMinutes: true },
+              });
+              if (
+                candidates.some((other) =>
+                  overlaps(
+                    input.scheduledAt,
+                    input.durationMinutes,
+                    other.scheduledAt,
+                    other.durationMinutes,
+                  ),
+                )
+              ) {
+                throw new TRPCError({
+                  code: "CONFLICT",
+                  message:
+                    "Pet or vet already has an appointment at this time / Thú cưng hoặc bác sĩ đã có lịch trùng giờ",
+                });
+              }
+              return tx.appointment.create({
+                data: {
+                  ...input,
+                  ownerId: ctx.session.user.id,
+                  status: "PENDING",
+                },
+              });
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          );
+        } catch (error) {
+          if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === "P2034"
+          ) {
+            if (attempt < 2) continue;
+            throw new TRPCError({
+              code: "CONFLICT",
+              message:
+                "Schedule changed; please try again / Lịch vừa thay đổi, vui lòng thử lại",
+            });
+          }
+          throw error;
+        }
       }
-
-      // Verify clinic exists
-      const clinic = await ctx.db.clinic.findUnique({
-        where: { id: input.clinicId },
-      });
-      if (!clinic)
-        throw new TRPCError({ code: "NOT_FOUND", message: "Clinic not found" });
-
-      return ctx.db.appointment.create({
-        data: {
-          petId: input.petId,
-          ownerId: ctx.session.user.id,
-          clinicId: input.clinicId,
-          vetId: input.vetId,
-          type: input.type,
-          scheduledAt: input.scheduledAt,
-          durationMinutes: input.durationMinutes,
-          chiefComplaint: input.chiefComplaint,
-          status: AppointmentStatus.PENDING,
-        },
-      });
+      throw new TRPCError({ code: "CONFLICT" });
     }),
 
   /** Update appointment status — clinic or vet */
@@ -129,21 +220,22 @@ export const appointmentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const appointment = await ctx.db.appointment.findUnique({
         where: { id: input.appointmentId },
-        select: { petId: true },
+        select: { clinicId: true, status: true },
       });
       if (!appointment) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const access = await requirePetAccess(
-        ctx.db,
-        ctx.session.user,
-        appointment.petId,
-      );
-      requirePermission(access.permissions, "canWriteMedicalRecords");
-
-      return ctx.db.appointment.update({
-        where: { id: input.appointmentId },
+      await requireClinicAccess(ctx.db, ctx.session.user, appointment.clinicId);
+      assertTransition(appointment.status, input.status);
+      const result = await ctx.db.appointment.updateMany({
+        where: { id: input.appointmentId, status: appointment.status },
         data: { status: input.status },
       });
+      if (!result.count)
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Appointment changed; reload the page",
+        });
+      return { ok: true };
     }),
 
   /** Cancel appointment — owner */
@@ -160,9 +252,12 @@ export const appointmentsRouter = createTRPCRouter({
       ) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
-      return ctx.db.appointment.update({
-        where: { id: input.appointmentId },
+      assertTransition(appt.status, AppointmentStatus.CANCELLED);
+      const result = await ctx.db.appointment.updateMany({
+        where: { id: input.appointmentId, status: appt.status },
         data: { status: AppointmentStatus.CANCELLED },
       });
+      if (!result.count) throw new TRPCError({ code: "CONFLICT" });
+      return { ok: true };
     }),
 });

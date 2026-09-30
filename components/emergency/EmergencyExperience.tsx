@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import { api } from "@/trpc/react";
+import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -141,7 +142,6 @@ const COPY = {
     clinicsBody: "Thông tin chờ chỉ để tham khảo. Hãy gọi để xác nhận trước khi đến.",
     clinicsEmpty: "Cho phép truy cập vị trí để tìm phòng khám cấp cứu 24/7 đã xác minh gần bạn.",
     locating: "Đang xác định vị trí…",
-    locationError: "Không thể truy cập vị trí. Hãy kiểm tra quyền vị trí trên trình duyệt.",
     open: "Đang trực",
     callNow: "Gọi ngay",
     directions: "Chỉ đường",
@@ -172,7 +172,6 @@ const COPY = {
     clinicsBody: "Wait information is indicative only. Call the clinic to confirm before travelling.",
     clinicsEmpty: "Share your location to find the nearest verified 24/7 emergency clinics.",
     locating: "Finding your location…",
-    locationError: "We could not access your location. Check your browser location permission.",
     open: "On duty",
     callNow: "Call now",
     directions: "Directions",
@@ -203,24 +202,22 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
     { enabled: coords !== null, staleTime: 30_000 },
   );
 
-  const findNearbyClinics = () => {
+  const findNearbyClinics = async () => {
+    if (isLocating) return;
     setLocationError("");
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords: position }) => {
-        setCoords({ lat: position.latitude, lng: position.longitude });
-        setIsLocating(false);
-        window.setTimeout(
-          () => document.getElementById("emergency-clinics")?.scrollIntoView({ behavior: "smooth" }),
-          100,
-        );
-      },
-      () => {
-        setLocationError(copy.locationError);
-        setIsLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 300_000 },
-    );
+    setCoords(null);
+    try {
+      setCoords(await getCurrentLocation());
+      window.setTimeout(
+        () => document.getElementById("emergency-clinics")?.scrollIntoView({ behavior: "smooth" }),
+        100,
+      );
+    } catch (error) {
+      setLocationError(getLocationErrorMessage(error, locale));
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   // useGSAP(
@@ -454,7 +451,8 @@ export function EmergencyExperience({ locale }: { locale: Locale }) {
                     {copy.directions}
                   </Link>
                   <a
-                    href={`tel:${clinic.phone.replace(/\s/g, "")}`}
+                    href={clinic.phone ? `tel:${clinic.phone.replace(/\s/g, "")}` : undefined}
+                    aria-disabled={!clinic.phone}
                     className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#20211f] px-4 text-sm font-bold text-[#f5f5ef] transition hover:-translate-y-0.5 hover:bg-[#353633] active:translate-y-px dark:bg-[#d85f53] dark:text-[#1a1b19] dark:hover:bg-[#ef7569]"
                   >
                     <Phone className="h-4 w-4" strokeWidth={1.8} />

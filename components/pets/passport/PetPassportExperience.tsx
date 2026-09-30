@@ -26,7 +26,7 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-import { useRouter } from "@/lib/navigation";
+import { Link, useRouter } from "@/lib/navigation";
 import {
   formatPassportDate,
   formatPassportDateTime,
@@ -226,6 +226,9 @@ export function PetPassportExperience({ petId }: { petId: string }) {
           </div>
         </div>
 
+        <div className="mb-5">
+          <Link href="/dashboard/pets" className="text-sm font-semibold underline">{locale === "vi" ? "Danh sách / thêm thú cưng" : "All pets / add pet"}</Link>
+        </div>
         <div className="mb-5">
           <PassportActions
             petId={pet.id}

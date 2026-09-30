@@ -175,13 +175,13 @@ export function Navbar({ locale }: NavbarProps) {
 
             {session?.user ? (
               <div className="flex items-center gap-1">
-                <button
-                  type="button"
+                <Link
+                  href="/dashboard/notifications"
                   className="hidden h-9 w-9 place-items-center rounded-lg text-[#4b4d48] transition hover:bg-[#deded8] sm:grid dark:text-[#d6d7d0] dark:hover:bg-white/10"
                   aria-label="Notifications"
                 >
                   <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
-                </button>
+                </Link>
 
                 <div className="relative" ref={profileRef}>
                   <button
@@ -236,11 +236,10 @@ export function Navbar({ locale }: NavbarProps) {
                             icon: Heart,
                             label: t("myPets"),
                           },
-                          {
-                            href: "/settings" as const,
-                            icon: Settings,
-                            label: t("settings"),
-                          },
+                          { href: "/dashboard/appointments", icon: LayoutDashboard, label: locale === "vi" ? "Lịch khám" : "Appointments" },
+                          { href: "/dashboard/reminders", icon: Bell, label: locale === "vi" ? "Nhắc lịch" : "Reminders" },
+                          ...(session.user.role !== "OWNER" ? [{ href: "/dashboard/clinic", icon: LayoutDashboard, label: locale === "vi" ? "Phòng khám" : "Clinic" }] : []),
+                          ...(session.user.role === "SYSTEM_ADMIN" ? [{ href: "/dashboard/admin", icon: Settings, label: locale === "vi" ? "Duyệt phòng khám" : "Clinic approvals" }] : []),
                         ].map((item) => (
                           <Link
                             key={item.href}

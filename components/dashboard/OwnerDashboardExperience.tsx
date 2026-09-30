@@ -169,6 +169,11 @@ export function OwnerDashboardExperience({
           </div>
         </header>
 
+        <nav aria-label={t("accountLabel")} className="mt-6 flex flex-wrap gap-3">
+          <Link href="/dashboard/appointments" className="rounded-xl border border-black/15 px-4 py-3 text-sm font-semibold dark:border-white/20">{t("stats.appointments")}</Link>
+          <Link href="/dashboard/reminders" className="rounded-xl border border-black/15 px-4 py-3 text-sm font-semibold dark:border-white/20">{t("reminders.title")}</Link>
+        </nav>
+
         {clinicRequestPending && (
           <div
             data-dashboard-reveal

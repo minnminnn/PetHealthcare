@@ -1,3 +1,5 @@
+import { managementRouter } from "./routers/management";
+import { notificationsRouter } from "./routers/notifications";
 import { createTRPCRouter } from "@/server/api/trpc";
 import { petsRouter } from "@/server/api/routers/pets";
 import { clinicsRouter } from "@/server/api/routers/clinics";
@@ -18,6 +20,8 @@ import { bloodDonorRouter } from "@/server/api/routers/bloodDonor";
  *   api.emergency.getNearestClinics.useQuery({ lat, lng })
  */
 export const appRouter = createTRPCRouter({
+  management: managementRouter,
+  notifications: notificationsRouter,
   pets: petsRouter,
   clinics: clinicsRouter,
   search: searchRouter,

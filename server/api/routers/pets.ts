@@ -5,14 +5,14 @@ import { Species, BloodType, Role } from "@prisma/client";
 import { requirePermission, requirePetAccess } from "@/server/authz/pet-access";
 
 const createPetSchema = z.object({
-  name: z.string().min(1).max(50),
+  name: z.string().trim().min(1).max(50),
   species: z.nativeEnum(Species),
   breed: z.string().optional(),
   color: z.string().optional(),
-  dateOfBirth: z.date().optional(),
+  dateOfBirth: z.date().refine((value) => value <= new Date(), "Birth date cannot be in the future").optional(),
   gender: z.enum(["male", "female", "unknown"]).optional(),
   isNeutered: z.boolean().default(false),
-  microchipId: z.string().optional(),
+  microchipId: z.string().trim().min(1).max(100).optional(),
   bloodType: z.nativeEnum(BloodType).default(BloodType.UNKNOWN),
   weight: z.number().positive().optional(),
   notes: z.string().max(1000).optional(),
@@ -191,19 +191,9 @@ export const petsRouter = createTRPCRouter({
           ...rest,
           ownerId: ctx.session.user.id,
           weight: weight ?? null,
+          ...(weight ? { weightHistory: { create: { weight, recordedBy: ctx.session.user.name ?? "Owner" } } } : {}),
         },
       });
-
-      // Record initial weight if provided
-      if (weight) {
-        await ctx.db.weightRecord.create({
-          data: {
-            petId: pet.id,
-            weight,
-            recordedBy: ctx.session.user.name ?? "Owner",
-          },
-        });
-      }
 
       return pet;
     }),

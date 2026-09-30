@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { api } from "@/trpc/react";
+import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 
 export function SOSButton() {
   const t = useTranslations("sos");
@@ -35,32 +36,19 @@ export function SOSButton() {
 
   const closeModal = () => setIsModalOpen(false);
 
-  const handleSOSClick = () => {
+  const handleSOSClick = async () => {
     setIsModalOpen(true);
+    if (isLocating) return;
     setIsLocating(true);
     setGeoError(null);
-
-    if (!navigator.geolocation) {
-      setGeoError(t("geoError"));
+    setCoords(null);
+    try {
+      setCoords(await getCurrentLocation());
+    } catch (error) {
+      setGeoError(getLocationErrorMessage(error, locale));
+    } finally {
       setIsLocating(false);
-      return;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setCoords({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setIsLocating(false);
-      },
-      () => {
-        setGeoError(t("geoError"));
-        setIsLocating(false);
-        setCoords(null);
-      },
-      { timeout: 8000, maximumAge: 60000 },
-    );
   };
 
   useEffect(() => {
@@ -240,6 +228,7 @@ export function SOSButton() {
                           <div className="mt-4 grid grid-cols-1 gap-2 min-[360px]:grid-cols-2">
                             <a
                               href={clinic.callUrl}
+                              aria-disabled={!clinic.callUrl}
                               className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#b9473e] px-4 text-sm font-semibold text-[#fff9f7] transition-colors hover:bg-[#a13d35] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b9473e] dark:bg-[#ef7569] dark:text-[#151614]"
                             >
                               <Phone className="h-4 w-4" aria-hidden="true" />

@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { ReminderType, NotificationChannel } from "@prisma/client";
-import { inngest } from "@/server/inngest/client";
+import { ReminderType } from "@prisma/client";
 
 export const remindersRouter = createTRPCRouter({
   /** List reminders for all of a user's pets */
@@ -28,7 +27,7 @@ export const remindersRouter = createTRPCRouter({
             : {
                 pet: { ownerId: ctx.session.user.id },
               }),
-          isActive: true,
+          pet: { ownerId: ctx.session.user.id, isActive: true },
         },
         include: {
           pet: {
@@ -47,39 +46,34 @@ export const remindersRouter = createTRPCRouter({
         type: z.nativeEnum(ReminderType),
         title: z.string().min(1).max(200),
         dueAt: z.date(),
-        repeatDays: z.number().optional(),
+        repeatDays: z.number().int().min(1).max(3650).optional(),
         channel: z
-          .array(z.nativeEnum(NotificationChannel))
-          .default(["PUSH", "EMAIL"]),
+          .array(z.enum(["IN_APP", "EMAIL"]))
+          .min(1)
+          .default(["IN_APP"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       // Verify pet ownership
       const pet = await ctx.db.pet.findUnique({ where: { id: input.petId } });
-      if (!pet || pet.ownerId !== ctx.session.user.id) {
+      if (!pet?.isActive || pet.ownerId !== ctx.session.user.id) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const reminder = await ctx.db.reminder.create({ data: input });
-
-      // Schedule Inngest background job
-      await inngest.send({
-        name: "reminder/schedule",
-        data: {
-          reminderId: reminder.id,
-          petId: pet.id,
-          petName: pet.name,
-          ownerId: ctx.session.user.id,
-          dueAt: input.dueAt.toISOString(),
-          type: input.type,
-          title: input.title,
-          channel: input.channel,
-          repeatDays: input.repeatDays,
-        },
-        ts: input.dueAt.getTime(),
-      });
-
-      return reminder;
+      if (input.dueAt <= new Date())
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Choose a future reminder time / Chọn thời gian nhắc trong tương lai",
+        });
+      if (input.channel.includes("EMAIL") && !process.env.RESEND_API_KEY)
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Email is not configured; use in-app reminders / Chưa cấu hình email, hãy chọn thông báo trong ứng dụng",
+        });
+      // The scheduler polls persisted due reminders. Saving does not depend on an external event API.
+      return ctx.db.reminder.create({ data: input });
     }),
 
   /** Toggle active state */
@@ -89,11 +83,19 @@ export const remindersRouter = createTRPCRouter({
       const reminder = await ctx.db.reminder.findFirst({
         where: {
           id: input.reminderId,
+          isSent: false,
           pet: { ownerId: ctx.session.user.id, isActive: true },
         },
-        select: { id: true },
+        select: { id: true, dueAt: true },
       });
       if (!reminder) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (input.isActive && reminder.dueAt <= new Date())
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Create a new future reminder / Hãy tạo nhắc lịch mới trong tương lai",
+        });
 
       return ctx.db.reminder.update({
         where: { id: input.reminderId },
@@ -108,9 +110,10 @@ export const remindersRouter = createTRPCRouter({
       const reminder = await ctx.db.reminder.findFirst({
         where: {
           id: input.reminderId,
+          isSent: false,
           pet: { ownerId: ctx.session.user.id, isActive: true },
         },
-        select: { id: true },
+        select: { id: true, dueAt: true },
       });
       if (!reminder) throw new TRPCError({ code: "NOT_FOUND" });
 

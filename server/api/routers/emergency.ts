@@ -55,7 +55,7 @@ export const emergencyRouter = createTRPCRouter({
         limit: 3,
       }).map((clinic) => ({
         ...clinic,
-        callUrl: `tel:${clinic.phone.replace(/[^+\d]/g, "")}`,
+        callUrl: clinic.phone ? `tel:${clinic.phone.replace(/[^+\d]/g, "")}` : undefined,
         mapsUrl: `/clinics?q=${encodeURIComponent(clinic.name)}`,
       }));
     }),
