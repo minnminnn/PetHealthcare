@@ -9,6 +9,11 @@ import { Role, ClinicStatus, Species } from "@prisma/client";
 import { env } from "@/env";
 import { discoverClinics } from "@/server/services/clinic-discovery";
 import { suggestLocations } from "@/server/services/mapbox-geocoding";
+import {
+  searchClinicPoi,
+  searchNearbyVeterinaryClinics,
+  selectClinicMapCenter,
+} from "@/server/services/mapbox-search";
 
 const clinicSelect = {
   id: true,
@@ -123,35 +128,37 @@ export const clinicsRouter = createTRPCRouter({
     }),
 
   /** Search verified clinic records and rank them using the user's real location. */
-  discover: publicProcedure.input(discoveryInput).query(async ({ ctx, input }) => {
-    const clinics = await ctx.db.clinic.findMany({
-      where: {
-        isVerified: true,
-        ...(input.is24h !== undefined && { is24h: input.is24h }),
-        ...(input.species && { specializations: { has: input.species } }),
-        ...(input.status && { status: input.status }),
-      },
-      select: clinicSelect,
-      take: 250,
-    });
+  discover: publicProcedure
+    .input(discoveryInput)
+    .query(async ({ ctx, input }) => {
+      const clinics = await ctx.db.clinic.findMany({
+        where: {
+          isVerified: true,
+          ...(input.is24h !== undefined && { is24h: input.is24h }),
+          ...(input.species && { specializations: { has: input.species } }),
+          ...(input.status && { status: input.status }),
+        },
+        select: clinicSelect,
+        take: 250,
+      });
 
-    return discoverClinics(clinics, {
-      query: input.query,
-      origin:
-        input.lat !== undefined && input.lng !== undefined
-          ? { latitude: input.lat, longitude: input.lng }
-          : undefined,
-      radiusKm:
-        input.lat !== undefined && input.lng !== undefined
-          ? input.radiusKm
-          : undefined,
-      is24h: input.is24h,
-      species: input.species,
-      statuses: input.status ? [input.status] : undefined,
-      sort: input.sort,
-      limit: input.limit,
-    });
-  }),
+      return discoverClinics(clinics, {
+        query: input.query,
+        origin:
+          input.lat !== undefined && input.lng !== undefined
+            ? { latitude: input.lat, longitude: input.lng }
+            : undefined,
+        radiusKm:
+          input.lat !== undefined && input.lng !== undefined
+            ? input.radiusKm
+            : undefined,
+        is24h: input.is24h,
+        species: input.species,
+        statuses: input.status ? [input.status] : undefined,
+        sort: input.sort,
+        limit: input.limit,
+      });
+    }),
 
   /** Mapbox-backed address suggestions used to set the discovery origin. */
   locationSuggestions: publicProcedure
@@ -192,6 +199,101 @@ export const clinicsRouter = createTRPCRouter({
           message: "Location suggestions are temporarily unavailable",
         });
       }
+    }),
+
+  /** Resolve one selected clinic and temporary nearby Mapbox POI suggestions. */
+  mapData: publicProcedure
+    .input(
+      z.object({
+        clinicId: z.string().min(1),
+        locale: z.enum(["vi", "en"]).default("vi"),
+        radiusKm: z.number().positive().max(25).default(8),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const clinic = await ctx.db.clinic.findFirst({
+        where: { id: input.clinicId, isVerified: true },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          city: true,
+          latitude: true,
+          longitude: true,
+        },
+      });
+      if (!clinic) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Clinic not found" });
+      }
+
+      const accessToken =
+        env.MAPBOX_ACCESS_TOKEN ?? env.NEXT_PUBLIC_MAPBOX_TOKEN;
+      if (!accessToken) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Mapbox is not configured",
+        });
+      }
+
+      const databaseCenter =
+        clinic.latitude !== null && clinic.longitude !== null
+          ? { latitude: clinic.latitude, longitude: clinic.longitude }
+          : null;
+      let exactMatch: Awaited<ReturnType<typeof searchClinicPoi>> = null;
+      let warning:
+        "EXACT_SEARCH_UNAVAILABLE" | "NEARBY_SEARCH_UNAVAILABLE" | null = null;
+
+      try {
+        exactMatch = await searchClinicPoi({
+          name: clinic.name,
+          address: [clinic.address, clinic.city].filter(Boolean).join(", "),
+          locale: input.locale,
+          proximity: databaseCenter ?? undefined,
+          accessToken,
+        });
+      } catch (cause) {
+        if (!databaseCenter) warning = "EXACT_SEARCH_UNAVAILABLE";
+        console.error("Mapbox exact clinic search failed", cause);
+      }
+
+      const center = selectClinicMapCenter({
+        databaseCenter,
+        searchResult: exactMatch,
+      });
+      if (!center) {
+        return {
+          selected: null,
+          nearby: [],
+          warning: warning ?? "EXACT_SEARCH_UNAVAILABLE",
+        };
+      }
+
+      let nearby: Awaited<ReturnType<typeof searchNearbyVeterinaryClinics>> =
+        [];
+      try {
+        nearby = await searchNearbyVeterinaryClinics({
+          center,
+          locale: input.locale,
+          radiusKm: input.radiusKm,
+          accessToken,
+        });
+      } catch (cause) {
+        warning = "NEARBY_SEARCH_UNAVAILABLE";
+        console.error("Mapbox nearby clinic search failed", cause);
+      }
+
+      return {
+        selected: {
+          id: clinic.id,
+          name: clinic.name,
+          address: clinic.address,
+          latitude: center.latitude,
+          longitude: center.longitude,
+          source: center.source,
+        },
+        nearby: nearby.filter((result) => result.id !== exactMatch?.id),
+        warning,
+      };
     }),
 
   /** Backwards-compatible nearby endpoint using the shared discovery service. */
@@ -238,7 +340,10 @@ export const clinicsRouter = createTRPCRouter({
         where: { id: input.clinicId },
       });
       if (!clinic) throw new TRPCError({ code: "NOT_FOUND" });
-      if (clinic.adminUserId !== ctx.session.user.id && ctx.session.user.role !== Role.SYSTEM_ADMIN) {
+      if (
+        clinic.adminUserId !== ctx.session.user.id &&
+        ctx.session.user.role !== Role.SYSTEM_ADMIN
+      ) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       return ctx.db.clinic.update({

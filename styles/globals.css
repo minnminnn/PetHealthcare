@@ -238,10 +238,150 @@
   }
 }
 
-/* ─── Map Overrides (Leaflet) ────────────────────────────────────────────── */
-.leaflet-container {
-  @apply rounded-2xl border border-slate-200;
-  font-family: "InterVariable", sans-serif !important;
+/* ─── Clinic map (Mapbox GL JS) ──────────────────────────────────────────── */
+.mapboxgl-map {
+  font-family: "InterVariable", "Inter", sans-serif;
+}
+
+.mapboxgl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid rgb(32 33 31 / 0.12);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgb(20 21 19 / 0.14);
+}
+
+.clinic-map-marker {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid #f8f8f5;
+  border-radius: 999px;
+  background: #393a37;
+  color: #f8f8f5;
+  box-shadow: 0 7px 18px rgb(20 21 19 / 0.28);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.clinic-map-marker:hover,
+.clinic-map-marker:focus-visible {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 10px 24px rgb(20 21 19 / 0.34);
+  outline: none;
+}
+
+.clinic-map-marker--selected {
+  width: 38px;
+  height: 38px;
+  border-width: 3px;
+  background: #d85f53;
+  color: #191a18;
+  font-size: 17px;
+  font-weight: 800;
+  box-shadow:
+    0 0 0 6px rgb(216 95 83 / 0.22),
+    0 12px 28px rgb(20 21 19 / 0.36);
+}
+
+.clinic-map-marker--verified {
+  background: #20211f;
+}
+
+.clinic-map-marker--nearby {
+  width: 18px;
+  height: 18px;
+  border-color: #f8f8f5;
+  background: #d85f53;
+  color: #d85f53;
+  box-shadow: 0 5px 12px rgb(20 21 19 / 0.2);
+}
+
+.petcare-map-popup .mapboxgl-popup-content {
+  min-width: 230px;
+  max-width: 290px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgb(32 33 31 / 0.12);
+  border-radius: 16px;
+  background: #f8f8f5;
+  color: #20211f;
+  box-shadow: 0 18px 48px rgb(20 21 19 / 0.2);
+}
+
+.petcare-map-popup .mapboxgl-popup-tip {
+  border-top-color: #f8f8f5;
+}
+
+.petcare-map-popup .mapboxgl-popup-close-button {
+  top: 7px;
+  right: 7px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #5d5f59;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.petcare-map-popup .mapboxgl-popup-close-button:hover {
+  background: rgb(32 33 31 / 0.07);
+  color: #20211f;
+}
+
+.clinic-map-popup-content {
+  padding: 18px;
+}
+
+.clinic-map-popup-eyebrow {
+  margin: 0 32px 7px 0;
+  color: #b9473e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.clinic-map-popup-title {
+  margin: 0;
+  color: #20211f;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.clinic-map-popup-address {
+  margin: 7px 0 0;
+  color: #676964;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.clinic-map-popup-directions {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 14px;
+  border: 0;
+  border-radius: 9px;
+  background: #20211f;
+  color: #f8f8f5;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.clinic-map-popup-directions:hover {
+  background: #393a37;
+  transform: translateY(-1px);
 }
 
 @keyframes home-marquee {
@@ -328,14 +468,6 @@
   .passport-shell .bg-black\/\[0\.015\] {
     background-color: rgb(255 255 255 / 0.02) !important;
   }
-}
-
-.leaflet-popup-content-wrapper {
-  @apply rounded-xl border border-slate-200 shadow-card;
-}
-
-.leaflet-popup-tip {
-  @apply bg-white;
 }
 
 /* ─── Mobile Optimizations ───────────────────────────────────────────────── */

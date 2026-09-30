@@ -25,7 +25,10 @@ import {
 import { api } from "@/trpc/react";
 import { getCurrentLocation, getLocationErrorMessage } from "@/lib/geolocation";
 import { useDebounce } from "@/lib/hooks/useDebounce";
-import { ClinicStatus as PrismaClinicStatus, Species as PrismaSpecies } from "@prisma/client";
+import {
+  ClinicStatus as PrismaClinicStatus,
+  Species as PrismaSpecies,
+} from "@prisma/client";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -66,7 +69,8 @@ const COPY = {
     breadcrumbCurrent: "Phòng khám",
     eyebrow: "Phòng khám quanh bạn",
     title: "Tìm nơi chăm sóc phù hợp, gần bạn.",
-    description: "So sánh chuyên môn, giờ mở cửa và đánh giá trước khi đặt lịch.",
+    description:
+      "So sánh chuyên môn, giờ mở cửa và đánh giá trước khi đặt lịch.",
     searchPlaceholder: "Tên phòng khám, khu vực hoặc dịch vụ",
     searchLabel: "Tìm kiếm phòng khám",
     locationHint: "Chọn một địa điểm để tìm phòng khám gần đó",
@@ -86,8 +90,10 @@ const COPY = {
     call: "Gọi phòng khám",
     openAllDay: "Mở cửa 24/7",
     mapTitle: "Vị trí phòng khám",
-    mapDescription: "Chọn một phòng khám trong danh sách để xem vị trí và thông tin nhanh.",
-    mapPending: "Chỉ các phòng khám có tọa độ đã xác minh mới xuất hiện trên bản đồ.",
+    mapDescription:
+      "Chọn một phòng khám trong danh sách để xem vị trí và thông tin nhanh.",
+    mapPending:
+      "Chỉ các phòng khám có tọa độ đã xác minh mới xuất hiện trên bản đồ.",
     selected: "Đang chọn",
     emptyTitle: "Chưa tìm thấy phòng khám phù hợp",
     emptyBody: "Thử đổi từ khóa hoặc chọn lại bộ lọc.",
@@ -98,7 +104,8 @@ const COPY = {
     breadcrumbCurrent: "Clinics",
     eyebrow: "Care near you",
     title: "Find the right care, close to home.",
-    description: "Compare expertise, opening hours, and community feedback before booking.",
+    description:
+      "Compare expertise, opening hours, and community feedback before booking.",
     searchPlaceholder: "Clinic name, area, or service",
     searchLabel: "Search clinics",
     locationHint: "Choose a place to find clinics nearby",
@@ -118,7 +125,8 @@ const COPY = {
     call: "Call clinic",
     openAllDay: "Open 24/7",
     mapTitle: "Clinic locations",
-    mapDescription: "Select a clinic from the list to see its location and key details.",
+    mapDescription:
+      "Select a clinic from the list to see its location and key details.",
     mapPending: "Only clinics with verified coordinates appear on the map.",
     selected: "Selected",
     emptyTitle: "No matching clinics yet",
@@ -144,7 +152,9 @@ const STATUS: Record<ClinicStatus, Record<Locale, string>> = {
 };
 
 function formatReviews(value: number, locale: Locale) {
-  return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(value);
+  return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(
+    value,
+  );
 }
 
 export function ClinicsExperience({ locale }: { locale: Locale }) {
@@ -163,13 +173,17 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
   const [sort, setSort] = useState<"distance" | "rating">("distance");
   const [selectedId, setSelectedId] = useState("");
   const [selectedPlace, setSelectedPlace] = useState<string | null>(null);
-  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(() => {
-    const lat = Number(searchParams.get("lat"));
-    const lng = Number(searchParams.get("lng"));
-    return Number.isFinite(lat) && Number.isFinite(lng) && searchParams.has("lat")
-      ? { lat, lng }
-      : null;
-  });
+  const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
+    () => {
+      const lat = Number(searchParams.get("lat"));
+      const lng = Number(searchParams.get("lng"));
+      return Number.isFinite(lat) &&
+        Number.isFinite(lng) &&
+        searchParams.has("lat")
+        ? { lat, lng }
+        : null;
+    },
+  );
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -343,7 +357,9 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                     setOrigin(null);
                   }}
                   onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => window.setTimeout(() => setIsSearchFocused(false), 150)}
+                  onBlur={() =>
+                    window.setTimeout(() => setIsSearchFocused(false), 150)
+                  }
                   placeholder={copy.searchPlaceholder}
                   className="w-full bg-transparent text-sm text-[#20211f] outline-none placeholder:text-[#74766f] dark:text-[#f1f1ed] dark:placeholder:text-[#92948d]"
                 />
@@ -378,7 +394,10 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                       type="button"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => {
-                        setOrigin({ lat: place.latitude, lng: place.longitude });
+                        setOrigin({
+                          lat: place.latitude,
+                          lng: place.longitude,
+                        });
                         setSelectedPlace(place.address);
                         setQuery(place.address);
                         setSort("distance");
@@ -388,7 +407,9 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                     >
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#b9473e] dark:text-[#ef7569]" />
                       <span>
-                        <span className="block text-sm font-semibold">{place.label}</span>
+                        <span className="block text-sm font-semibold">
+                          {place.label}
+                        </span>
                         <span className="mt-0.5 block text-xs leading-5 text-[#676964] dark:text-[#b7b8b2]">
                           {place.address}
                         </span>
@@ -558,7 +579,10 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                                   </span>
                                   {clinic.is24h && (
                                     <span className="inline-flex items-center gap-1.5 text-[#b9473e] dark:text-[#ef7569]">
-                                      <Clock3 className="h-3.5 w-3.5" strokeWidth={1.8} />
+                                      <Clock3
+                                        className="h-3.5 w-3.5"
+                                        strokeWidth={1.8}
+                                      />
                                       {copy.openAllDay}
                                     </span>
                                   )}
@@ -570,7 +594,11 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
 
                               {selected && (
                                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#d85f53] text-[#1a1b19]">
-                                  <Check className="h-4 w-4" strokeWidth={2.2} aria-hidden="true" />
+                                  <Check
+                                    className="h-4 w-4"
+                                    strokeWidth={2.2}
+                                    aria-hidden="true"
+                                  />
                                 </span>
                               )}
                             </div>
@@ -591,7 +619,8 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                                 />
                                 {clinic.rating}
                                 <span className="font-normal text-[#74766f] dark:text-[#92948d]">
-                                  ({formatReviews(clinic.reviewCount, locale)} {copy.reviews})
+                                  ({formatReviews(clinic.reviewCount, locale)}{" "}
+                                  {copy.reviews})
                                 </span>
                               </span>
                               {clinic.distanceKm !== null && (
@@ -604,15 +633,24 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                               )}
                               {clinic.isVerified && (
                                 <span className="inline-flex items-center gap-1.5 text-[#5d5f59] dark:text-[#c6c7c0]">
-                                  <ShieldCheck className="h-4 w-4" strokeWidth={1.8} />
-                                  {clinic.name.startsWith("[DEMO]") ? "Demo" : copy.verified}
+                                  <ShieldCheck
+                                    className="h-4 w-4"
+                                    strokeWidth={1.8}
+                                  />
+                                  {clinic.name.startsWith("[DEMO]")
+                                    ? "Demo"
+                                    : copy.verified}
                                 </span>
                               )}
                             </div>
 
                             <p className="mt-4 text-sm leading-relaxed text-[#5d5f59] dark:text-[#c6c7c0]">
                               {clinic.specializations
-                                .map((item) => item.replaceAll("_", " ").toLocaleLowerCase(locale))
+                                .map((item) =>
+                                  item
+                                    .replaceAll("_", " ")
+                                    .toLocaleLowerCase(locale),
+                                )
                                 .join(" / ")}
                             </p>
                           </div>
@@ -620,15 +658,28 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
 
                         <div className="mt-5 flex items-center justify-end gap-3 sm:pl-[12.5rem]">
                           <a
-                            href={clinic.phone ? `tel:${clinic.phone.replace(/\s/g, "")}` : undefined}
+                            href={
+                              clinic.phone
+                                ? `tel:${clinic.phone.replace(/\s/g, "")}`
+                                : undefined
+                            }
                             aria-disabled={!clinic.phone}
                             className="inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-[#b4b6af] px-4 text-sm font-bold text-[#393a37] transition hover:border-[#b9473e] hover:text-[#b9473e] active:translate-y-px dark:border-white/20 dark:text-[#d6d7d0] dark:hover:border-[#ef7569] dark:hover:text-[#ef7569]"
                           >
                             <Phone className="h-4 w-4" strokeWidth={1.8} />
-                            {clinic.phone ? copy.call : (locale === "vi" ? "Demo — không gọi" : "Demo — no phone")}
+                            {clinic.phone
+                              ? copy.call
+                              : locale === "vi"
+                                ? "Demo — không gọi"
+                                : "Demo — no phone"}
                           </a>
                           <a
-                            href={clinic.website ?? (clinic.phone ? `tel:${clinic.phone.replace(/[^+\d]/g, "")}` : undefined)}
+                            href={
+                              clinic.website ??
+                              (clinic.phone
+                                ? `tel:${clinic.phone.replace(/[^+\d]/g, "")}`
+                                : undefined)
+                            }
                             aria-disabled={!clinic.website && !clinic.phone}
                             target={clinic.website ? "_blank" : undefined}
                             rel={clinic.website ? "noreferrer" : undefined}
@@ -671,6 +722,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                   <ClinicMap
                     clinics={filteredClinics}
                     selectedId={selectedClinic?.id}
+                    locale={locale}
                     onSelect={setSelectedId}
                   />
                 </div>
@@ -681,7 +733,9 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                       <MapPin className="h-5 w-5" strokeWidth={1.8} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-[#f1f1ed]">{copy.mapTitle}</h3>
+                      <h3 className="text-lg font-semibold text-[#f1f1ed]">
+                        {copy.mapTitle}
+                      </h3>
                       <p className="mt-2 text-sm leading-relaxed text-[#b7b8b2]">
                         {copy.mapDescription}
                       </p>
