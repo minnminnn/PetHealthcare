@@ -548,6 +548,22 @@ model DonationAlert {
 // PHARMACY / DRUG LIBRARY
 // ─────────────────────────────────────────────────────────────
 
+model Medication {
+  id                String   @id @default(cuid())
+  name              String
+  type              String
+  tier              String
+  primaryUseCase    String   @db.Text
+  estimatedPriceVND String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([name, type])
+  @@index([type])
+  @@index([tier])
+  @@map("medications")
+}
+
 model Drug {
   id                String    @id @default(cuid())
   name              String
