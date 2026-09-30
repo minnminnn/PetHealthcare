@@ -20,6 +20,6 @@ Lệnh đầu chỉ kiểm tra tệp, không kết nối database. `--apply` th�
 
 Mật khẩu ngẫu nhiên được tạo một lần, lưu trong `prisma/demo/credentials.local.json`; danh sách tài khoản và mật khẩu đăng nhập nằm ở `docs/demo-accounts.local.md`. Hai tệp này bị loại khỏi Git. Đăng nhập bằng email/mật khẩu tại `/vi/login`, không dùng Google. Giữ tệp mật khẩu khi chạy lại.
 
-Script dùng ID ổn định với tiền tố `petcare-demo-` và `upsert` không cập nhật bản ghi cũ. Chạy lại không nhân đôi và không đổi mật khẩu hoặc xóa dữ liệu hiện có. Nếu lỗi giữa chừng, chạy lại để hoàn tất. Tệp có thể bổ sung mục với `key` mới (2 chữ số); thay đổi một mục đã nạp không tự ghi đè dữ liệu trong database.
+Script dùng ID ổn định với tiền tố `petcare-demo-`. Chạy lại không nhân đôi, không đổi mật khẩu và không xóa dữ liệu hiện có. Tên, số năm kinh nghiệm, mô tả và chuyên môn của hồ sơ bác sĩ demo được đồng bộ khi chạy lại; các dữ liệu khác đang có được giữ nguyên. Nếu lỗi giữa chừng, chạy lại để hoàn tất.
 
 Ngày lịch sử/lịch hẹn được tính theo thời điểm tạo bộ demo lần đầu. Tất cả dữ liệu y tế chỉ minh họa giao diện, không phải hướng dẫn điều trị.

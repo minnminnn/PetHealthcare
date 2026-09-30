@@ -276,7 +276,7 @@ model Clinic {
   @@index([isVerified])
   @@index([is24h])
   @@index([isExoticSpec])
-  // pg_trgm GIN index — created via raw SQL migration
+  @@index([nameUnaccented(ops: raw("gin_trgm_ops"))], type: Gin, map: "clinics_name_trgm_idx")
   @@map("clinics")
 }
 
@@ -316,6 +316,7 @@ model Pet {
   @@index([ownerId])
   @@index([microchipId])
   @@index([species])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "pets_name_trgm_idx")
   @@map("pets")
 }
 

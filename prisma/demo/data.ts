@@ -5,7 +5,7 @@ import ownerData from "./owners.json";
 
 const key = z.string().regex(/^\d{2}$/);
 const email = z.string().email().endsWith("@petcare-demo.test");
-export const clinics = z
+const clinicFixtures = z
   .array(
     z.object({
       key,
@@ -26,6 +26,162 @@ export const clinics = z
   )
   .nonempty()
   .parse(clinicData);
+
+const vetProfiles: Record<
+  string,
+  { vetName: string; yearsExperience: number; vetBio: string }
+> = {
+  "01": {
+    vetName: "BS. Thú y Nguyễn Minh Anh",
+    yearsExperience: 11,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "02": {
+    vetName: "BS. Thú y Trần Gia Hân",
+    yearsExperience: 7,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "03": {
+    vetName: "BS. Thú y Lê Hoàng Nam",
+    yearsExperience: 9,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "04": {
+    vetName: "BS. Thú y Phạm Khánh Linh",
+    yearsExperience: 13,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "05": {
+    vetName: "BS. Thú y Võ Tuấn Kiệt",
+    yearsExperience: 6,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "06": {
+    vetName: "BS. Thú y Đặng Ngọc Mai",
+    yearsExperience: 8,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "07": {
+    vetName: "BS. Thú y Bùi Đức Huy",
+    yearsExperience: 12,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "08": {
+    vetName: "BS. Thú y Nguyễn Thảo Vy",
+    yearsExperience: 5,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "09": {
+    vetName: "BS. Thú y Trần Quang Phúc",
+    yearsExperience: 10,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "10": {
+    vetName: "BS. Thú y Lê Hải Yến",
+    yearsExperience: 14,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "11": {
+    vetName: "BS. Thú y Phạm Quốc Bảo",
+    yearsExperience: 7,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "12": {
+    vetName: "BS. Thú y Vũ Thanh Trúc",
+    yearsExperience: 9,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "13": {
+    vetName: "BS. Thú y Nguyễn Nhật Minh",
+    yearsExperience: 11,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "14": {
+    vetName: "BS. Thú y Trần Bảo Ngọc",
+    yearsExperience: 6,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "15": {
+    vetName: "BS. Thú y Lâm Hoàng Long",
+    yearsExperience: 8,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "16": {
+    vetName: "BS. Thú y Phan Thu Hà",
+    yearsExperience: 15,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "17": {
+    vetName: "BS. Thú y Đỗ Minh Quân",
+    yearsExperience: 9,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "18": {
+    vetName: "BS. Thú y Nguyễn Tú Anh",
+    yearsExperience: 7,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "19": {
+    vetName: "BS. Thú y Trương Gia Bảo",
+    yearsExperience: 12,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "20": {
+    vetName: "BS. Thú y Lê Mỹ Duyên",
+    yearsExperience: 5,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "21": {
+    vetName: "BS. Thú y Huỳnh Anh Khoa",
+    yearsExperience: 10,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+  "22": {
+    vetName: "BS. Thú y Nguyễn Hoài An",
+    yearsExperience: 13,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Kinh nghiệm khám nội khoa, cấp cứu và chăm sóc chó, mèo cùng thú ngoại lai.",
+  },
+  "23": {
+    vetName: "BS. Thú y Đặng Khánh Chi",
+    yearsExperience: 8,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Chuyên chăm sóc chim, thỏ, bò sát và các thú cưng nhỏ, thú ngoại lai.",
+  },
+  "24": {
+    vetName: "BS. Thú y Phạm Minh Đức",
+    yearsExperience: 6,
+    vetBio:
+      "Hồ sơ hư cấu phục vụ demo. Tập trung nội khoa, chăm sóc dự phòng và quản lý bệnh mạn tính ở chó, mèo và thỏ.",
+  },
+};
+
+export const clinics = clinicFixtures.map((clinic) => {
+  const profile = vetProfiles[clinic.key];
+  if (!profile) throw new Error(`Missing demo vet profile ${clinic.key}`);
+  return { ...clinic, ...profile };
+});
 
 export const owners = z
   .array(
@@ -64,6 +220,10 @@ unique(
 unique(
   clinics.map((c) => c.slug),
   "clinic slug",
+);
+unique(
+  clinics.map((c) => c.vetName),
+  "vet name",
 );
 unique(
   owners.map((o) => o.key),

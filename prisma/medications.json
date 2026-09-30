@@ -1,0 +1,632 @@
+[
+  {
+    "name": "Bravecto (Fluralaner)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Flea, Tick & Mite Control (Lasts 12 weeks)",
+    "estimatedPriceVND": "500,000 - 850,000"
+  },
+  {
+    "name": "NexGard Spectra",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Broad Spectrum Parasiticide (Fleas, Ticks, Worms)",
+    "estimatedPriceVND": "350,000 - 500,000"
+  },
+  {
+    "name": "Simparica Trio",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Flea, Tick, Heartworm & Intestinal Worms",
+    "estimatedPriceVND": "380,000 - 550,000"
+  },
+  {
+    "name": "Revolution Plus (Selamectin/Sarolaner)",
+    "type": "Topical",
+    "tier": "Premium",
+    "primaryUseCase": "Feline Broad Spectrum Parasiticide",
+    "estimatedPriceVND": "350,000 - 500,000"
+  },
+  {
+    "name": "Seresto Collar",
+    "type": "Topical",
+    "tier": "Premium",
+    "primaryUseCase": "Flea & Tick Prevention (Lasts 8 months)",
+    "estimatedPriceVND": "800,000 - 1,200,000"
+  },
+  {
+    "name": "Convenia (Cefovecin)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Long-acting Antibiotic (Lasts 14 days)",
+    "estimatedPriceVND": "800,000 - 1,200,000"
+  },
+  {
+    "name": "Apoquel (Oclacitinib)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Severe Allergy & Itch Relief",
+    "estimatedPriceVND": "900,000 - 1,500,000"
+  },
+  {
+    "name": "Cytopoint (Lokivetmab)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Targeted Itch Relief (Lasts 4-8 weeks)",
+    "estimatedPriceVND": "1,500,000 - 2,500,000"
+  },
+  {
+    "name": "Cerenia (Maropitant)",
+    "type": "Injectable / Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Acute Anti-vomiting & Nausea Prevention",
+    "estimatedPriceVND": "400,000 - 600,000"
+  },
+  {
+    "name": "Vetmedin (Pimobendan)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Congestive Heart Failure Management",
+    "estimatedPriceVND": "800,000 - 1,500,000"
+  },
+  {
+    "name": "ProHeart 12",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Heartworm Prevention (Lasts 12 months)",
+    "estimatedPriceVND": "1,000,000 - 1,800,000"
+  },
+  {
+    "name": "Onsior (Robenacoxib)",
+    "type": "Oral / Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Targeted Pain Relief & Anti-inflammatory (Feline Focus)",
+    "estimatedPriceVND": "400,000 - 700,000"
+  },
+  {
+    "name": "Semintra (Telmisartan)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Feline Chronic Kidney Disease Management",
+    "estimatedPriceVND": "1,200,000 - 1,800,000"
+  },
+  {
+    "name": "Solensia (Frunevetmab)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Feline Osteoarthritis Pain Relief (Monthly)",
+    "estimatedPriceVND": "1,500,000 - 2,000,000"
+  },
+  {
+    "name": "Librela (Bedinvetmab)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Canine Osteoarthritis Pain Relief (Monthly)",
+    "estimatedPriceVND": "1,500,000 - 2,500,000"
+  },
+  {
+    "name": "Galliprant (Grapiprant)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Targeted NSAID for Canine Osteoarthritis",
+    "estimatedPriceVND": "1,000,000 - 1,500,000"
+  },
+  {
+    "name": "Palladia (Toceranib)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Canine Mast Cell Tumor Treatment (Oncology)",
+    "estimatedPriceVND": "2,000,000 - 3,500,000"
+  },
+  {
+    "name": "Bexacat (Bexagliflozin)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Feline Diabetes Management (Non-insulin)",
+    "estimatedPriceVND": "1,800,000 - 2,500,000"
+  },
+  {
+    "name": "Vetoryl (Trilostane)",
+    "type": "Oral",
+    "tier": "Premium",
+    "primaryUseCase": "Canine Cushing's Disease Treatment",
+    "estimatedPriceVND": "1,500,000 - 2,500,000"
+  },
+  {
+    "name": "Caninsulin / Vetsulin",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Veterinary Insulin for Diabetes Mellitus",
+    "estimatedPriceVND": "500,000 - 800,000"
+  },
+  {
+    "name": "Optimmune (Cyclosporine)",
+    "type": "Ophthalmic",
+    "tier": "Premium",
+    "primaryUseCase": "Dry Eye (KCS) & Chronic Eye Inflammation",
+    "estimatedPriceVND": "700,000 - 1,200,000"
+  },
+  {
+    "name": "Posatex",
+    "type": "Otic",
+    "tier": "Premium",
+    "primaryUseCase": "Severe Bacterial & Fungal Ear Infections",
+    "estimatedPriceVND": "400,000 - 600,000"
+  },
+  {
+    "name": "Purevax (Feline Core)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Non-adjuvanted Core Feline Vaccine",
+    "estimatedPriceVND": "300,000 - 450,000"
+  },
+  {
+    "name": "Vanguard Plus 5/CV-L",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Comprehensive Canine Vaccine",
+    "estimatedPriceVND": "250,000 - 350,000"
+  },
+  {
+    "name": "Zylexis",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Immune System Stimulator",
+    "estimatedPriceVND": "600,000 - 800,000"
+  },
+  {
+    "name": "Alfaxan (Alfaxalone)",
+    "type": "Injectable",
+    "tier": "Premium",
+    "primaryUseCase": "Smooth Induction Anesthetic",
+    "estimatedPriceVND": "1,000,000 - 1,500,000"
+  },
+  {
+    "name": "Drontal Plus / Drontal Cat",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Broad Spectrum Dewormer",
+    "estimatedPriceVND": "60,000 - 90,000"
+  },
+  {
+    "name": "Heartgard Plus",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Heartworm Prevention",
+    "estimatedPriceVND": "120,000 - 180,000"
+  },
+  {
+    "name": "Clavamox / Synulox",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Broad Spectrum Antibiotic (Amoxicillin/Clavulanate)",
+    "estimatedPriceVND": "150,000 - 250,000"
+  },
+  {
+    "name": "Enrofloxacin (Baytril)",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Strong Antibiotic for Severe Infections",
+    "estimatedPriceVND": "150,000 - 300,000"
+  },
+  {
+    "name": "Meloxicam (Metacam)",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "NSAID (Pain Relief & Anti-inflammatory)",
+    "estimatedPriceVND": "150,000 - 300,000"
+  },
+  {
+    "name": "Gabapentin",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Nerve Pain Relief & Pre-visit Anxiety",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Doxycycline",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Treatment for Tick-borne Diseases & Respiratory",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Ondansetron",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Severe Anti-nausea Management",
+    "estimatedPriceVND": "150,000 - 250,000"
+  },
+  {
+    "name": "Nobivac Tricat Trio",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Standard Feline Core Vaccine",
+    "estimatedPriceVND": "200,000 - 250,000"
+  },
+  {
+    "name": "Nobivac DHPPI",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Standard Canine Core Vaccine",
+    "estimatedPriceVND": "180,000 - 220,000"
+  },
+  {
+    "name": "Dexamethasone",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Corticosteroid / Rapid Anti-inflammatory",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Prednisolone",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Long-term Corticosteroid Therapy",
+    "estimatedPriceVND": "50,000 - 100,000"
+  },
+  {
+    "name": "Metronidazole",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Gastrointestinal Infections (Giardia/Diarrhea)",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Famotidine",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Antacid & Stomach Ulcer Prevention",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Catosal",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Metabolic Stimulant & Vitamin B12",
+    "estimatedPriceVND": "100,000 - 180,000"
+  },
+  {
+    "name": "Buprenorphine",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Post-operative Pain Management",
+    "estimatedPriceVND": "200,000 - 350,000"
+  },
+  {
+    "name": "Tramadol",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Moderate to Severe Pain Management",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Cephalexin",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Skin and Soft Tissue Infections",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Itraconazole",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Systemic and Severe Fungal Infections",
+    "estimatedPriceVND": "150,000 - 300,000"
+  },
+  {
+    "name": "Ursodiol",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Liver Disease and Gallbladder Issues",
+    "estimatedPriceVND": "200,000 - 400,000"
+  },
+  {
+    "name": "Methimazole (Felimazole)",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Feline Hyperthyroidism Management",
+    "estimatedPriceVND": "150,000 - 250,000"
+  },
+  {
+    "name": "Levothyroxine",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Canine Hypothyroidism Treatment",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Furosemide (Salix)",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Diuretic for Heart Failure & Fluid Retention",
+    "estimatedPriceVND": "50,000 - 150,000"
+  },
+  {
+    "name": "Sucralfate",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Gastrointestinal Ulcer Coating and Healing",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Metoclopramide",
+    "type": "Injectable / Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "GI Motility Stimulant & Anti-nausea",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Chlorpheniramine",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Antihistamine for Mild Allergies",
+    "estimatedPriceVND": "50,000 - 100,000"
+  },
+  {
+    "name": "Marbofloxacin",
+    "type": "Oral / Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Severe Bacterial Infections (Skin, UTI)",
+    "estimatedPriceVND": "200,000 - 350,000"
+  },
+  {
+    "name": "Propofol",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Short-acting Intravenous Anesthetic",
+    "estimatedPriceVND": "150,000 - 300,000"
+  },
+  {
+    "name": "Ketamine",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Dissociative Anesthetic & Pain Management",
+    "estimatedPriceVND": "120,000 - 250,000"
+  },
+  {
+    "name": "Diazepam (Valium)",
+    "type": "Injectable",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Muscle Relaxant, Sedative & Anti-convulsant",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Phenobarbital",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Long-term Seizure & Epilepsy Management",
+    "estimatedPriceVND": "100,000 - 200,000"
+  },
+  {
+    "name": "Levetiracetam (Keppra)",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Advanced Seizure Control",
+    "estimatedPriceVND": "200,000 - 400,000"
+  },
+  {
+    "name": "Benazepril",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "ACE Inhibitor for Heart Failure & Kidney Disease",
+    "estimatedPriceVND": "120,000 - 220,000"
+  },
+  {
+    "name": "Spironolactone",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Potassium-sparing Diuretic for Heart Failure",
+    "estimatedPriceVND": "100,000 - 180,000"
+  },
+  {
+    "name": "Mirtazapine",
+    "type": "Oral / Topical",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Appetite Stimulant & Anti-nausea",
+    "estimatedPriceVND": "150,000 - 250,000"
+  },
+  {
+    "name": "Surolan",
+    "type": "Otic",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Treatment for Otitis Externa (Ear Infection)",
+    "estimatedPriceVND": "180,000 - 280,000"
+  },
+  {
+    "name": "Terramycin",
+    "type": "Ophthalmic",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Antibiotic Eye Ointment",
+    "estimatedPriceVND": "120,000 - 180,000"
+  },
+  {
+    "name": "FortiFlora (Purina)",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Probiotic Supplement for GI Health",
+    "estimatedPriceVND": "30,000 - 50,000 / sachet"
+  },
+  {
+    "name": "Clindamycin",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Dental Infections & Bone Infections",
+    "estimatedPriceVND": "150,000 - 250,000"
+  },
+  {
+    "name": "Omeprazole",
+    "type": "Oral",
+    "tier": "Mid-Range",
+    "primaryUseCase": "Proton Pump Inhibitor for Stomach Ulcers",
+    "estimatedPriceVND": "80,000 - 150,000"
+  },
+  {
+    "name": "Sanpet",
+    "type": "Oral",
+    "tier": "Budget",
+    "primaryUseCase": "Basic Intestinal Dewormer",
+    "estimatedPriceVND": "15,000 - 25,000"
+  },
+  {
+    "name": "Bio-Amox (Amoxicillin)",
+    "type": "Oral",
+    "tier": "Budget",
+    "primaryUseCase": "General Basic Antibiotic",
+    "estimatedPriceVND": "30,000 - 60,000"
+  },
+  {
+    "name": "Hanvet Bio-Tylosin",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Respiratory Infection Antibiotic",
+    "estimatedPriceVND": "35,000 - 55,000"
+  },
+  {
+    "name": "Bio-Tetra",
+    "type": "Oral",
+    "tier": "Budget",
+    "primaryUseCase": "Broad-spectrum Generic Antibiotic",
+    "estimatedPriceVND": "20,000 - 40,000"
+  },
+  {
+    "name": "Ivermectin 0.25%",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Mange, Scabies & External Parasite Treatment",
+    "estimatedPriceVND": "30,000 - 60,000"
+  },
+  {
+    "name": "Vitamin B-Complex (Bio)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Nutritional Supplement & Recovery",
+    "estimatedPriceVND": "25,000 - 45,000"
+  },
+  {
+    "name": "Vitamin C 5% (Vemedim)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Immune Support & Fever Reduction",
+    "estimatedPriceVND": "15,000 - 30,000"
+  },
+  {
+    "name": "Calcium Gluconate (Vemedim)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Emergency Calcium Deficiency Treatment",
+    "estimatedPriceVND": "20,000 - 45,000"
+  },
+  {
+    "name": "Atropine Sulfate",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Emergency Resuscitation / Pre-anesthesia",
+    "estimatedPriceVND": "20,000 - 50,000"
+  },
+  {
+    "name": "Oxytetracycline",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Broad-spectrum Injectable Antibiotic",
+    "estimatedPriceVND": "40,000 - 70,000"
+  },
+  {
+    "name": "Lincospectin (Generic)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Gastrointestinal & Respiratory Infection",
+    "estimatedPriceVND": "40,000 - 80,000"
+  },
+  {
+    "name": "Bio-Suline",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Pneumonia & Respiratory Infections",
+    "estimatedPriceVND": "35,000 - 60,000"
+  },
+  {
+    "name": "Vime-Deworm",
+    "type": "Oral",
+    "tier": "Budget",
+    "primaryUseCase": "Basic Dewormer (Dogs & Cats)",
+    "estimatedPriceVND": "20,000 - 40,000"
+  },
+  {
+    "name": "Gentamycin 5%",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Generic Antibiotic for Severe Gram-negative Infections",
+    "estimatedPriceVND": "20,000 - 45,000"
+  },
+  {
+    "name": "Kanamycin",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Generic Broad-spectrum Antibiotic",
+    "estimatedPriceVND": "20,000 - 45,000"
+  },
+  {
+    "name": "Pen-Strep (Penicillin/Streptomycin)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Basic Antibiotic for Wounds and Infections",
+    "estimatedPriceVND": "30,000 - 60,000"
+  },
+  {
+    "name": "Levamisole",
+    "type": "Injectable / Oral",
+    "tier": "Budget",
+    "primaryUseCase": "Basic Nematode Dewormer & Immune Stimulant",
+    "estimatedPriceVND": "15,000 - 30,000"
+  },
+  {
+    "name": "Mebendazole",
+    "type": "Oral",
+    "tier": "Budget",
+    "primaryUseCase": "Generic Intestinal Worm Treatment",
+    "estimatedPriceVND": "10,000 - 25,000"
+  },
+  {
+    "name": "Vime-Canlamin",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Calcium and Phosphorus Supplement",
+    "estimatedPriceVND": "25,000 - 50,000"
+  },
+  {
+    "name": "Bio-Vit Plus",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Multivitamin Complex for Weak/Sick Pets",
+    "estimatedPriceVND": "20,000 - 40,000"
+  },
+  {
+    "name": "Diclofenac",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Generic Anti-inflammatory and Fever Reducer",
+    "estimatedPriceVND": "15,000 - 30,000"
+  },
+  {
+    "name": "Lactated Ringer's Solution (LRS)",
+    "type": "Injectable",
+    "tier": "Budget",
+    "primaryUseCase": "Intravenous Fluid Therapy / Rehydration",
+    "estimatedPriceVND": "20,000 - 40,000 / bag"
+  },
+  {
+    "name": "Saline 0.9% (NaCl)",
+    "type": "Injectable / Topical",
+    "tier": "Budget",
+    "primaryUseCase": "Fluid Therapy & Wound Flushing",
+    "estimatedPriceVND": "15,000 - 30,000 / bag"
+  },
+  {
+    "name": "Chlorhexidine 2%",
+    "type": "Topical",
+    "tier": "Budget",
+    "primaryUseCase": "Antiseptic Skin & Wound Cleanser",
+    "estimatedPriceVND": "40,000 - 80,000 / bottle"
+  }
+]

@@ -38,6 +38,26 @@ async function counts(db: PrismaClient) {
   };
 }
 
+async function syncDemoVetProfiles(db: PrismaClient) {
+  await db.$transaction(
+    clinics.flatMap((clinic) => [
+      db.user.updateMany({
+        where: { id: demoId("admin", clinic.key) },
+        data: { name: clinic.vetName },
+      }),
+      db.vet.updateMany({
+        where: { id: demoId("vet", clinic.key) },
+        data: {
+          yearsExperience: clinic.yearsExperience,
+          bio: clinic.vetBio,
+          specializations: clinic.specializations,
+          isExoticSpec: clinic.isExoticSpec,
+        },
+      }),
+    ]),
+  );
+}
+
 async function verify(db: PrismaClient) {
   const actual = await counts(db);
   for (const name of Object.keys(
@@ -78,6 +98,23 @@ async function verify(db: PrismaClient) {
       !account.passwordHash
     ) {
       throw new Error(`Invalid demo account ${identity.id}`);
+    }
+  }
+  const storedVets = await db.vet.findMany({
+    where: { id: { startsWith: prefix } },
+    include: { user: { select: { name: true } } },
+  });
+  for (const clinic of clinics) {
+    const vet = storedVets.find(
+      (item) => item.id === demoId("vet", clinic.key),
+    );
+    if (
+      !vet ||
+      vet.user.name !== clinic.vetName ||
+      vet.yearsExperience !== clinic.yearsExperience ||
+      vet.bio !== clinic.vetBio
+    ) {
+      throw new Error(`Invalid demo vet profile ${clinic.key}`);
     }
   }
   if (existsSync(credentialsPath)) {
@@ -193,6 +230,7 @@ async function seed(db: PrismaClient) {
   }
   const passwordHash = await bcrypt.hash(credentials.password, 12);
   const existingCounts = await counts(db);
+  await syncDemoVetProfiles(db);
   if (
     Object.entries(expectedCounts).every(
       ([key, count]) =>
@@ -225,7 +263,7 @@ async function seed(db: PrismaClient) {
         const clinicId = demoId("clinic", clinic.key);
         await tx.user.upsert({
           where: { id: adminId },
-          update: {},
+          update: { name: clinic.vetName },
           create: {
             id: adminId,
             email: clinic.adminEmail,
@@ -274,7 +312,12 @@ async function seed(db: PrismaClient) {
         });
         await tx.vet.upsert({
           where: { id: demoId("vet", clinic.key) },
-          update: {},
+          update: {
+            yearsExperience: clinic.yearsExperience,
+            bio: clinic.vetBio,
+            specializations: clinic.specializations,
+            isExoticSpec: clinic.isExoticSpec,
+          },
           create: {
             id: demoId("vet", clinic.key),
             userId: adminId,
@@ -283,8 +326,8 @@ async function seed(db: PrismaClient) {
             specializations: clinic.specializations,
             isExoticSpec: clinic.isExoticSpec,
             isVerified: true,
-            bio: "Hồ sơ bác sĩ mô phỏng; không phải bác sĩ hoặc giấy phép hành nghề thật.",
-            yearsExperience: 0,
+            bio: clinic.vetBio,
+            yearsExperience: clinic.yearsExperience,
           },
         });
       },
@@ -527,9 +570,12 @@ async function seed(db: PrismaClient) {
     "",
     "## Quản trị phòng khám / bác sĩ demo",
     "",
-    "| Email | Phòng khám |",
-    "|---|---|",
-    ...clinics.map((c) => `| ${c.adminEmail} | ${c.name} |`),
+    "| Email | Phòng khám | Bác sĩ | Kinh nghiệm |",
+    "|---|---|---|---|",
+    ...clinics.map(
+      (c) =>
+        `| ${c.adminEmail} | ${c.name} | ${c.vetName} | ${c.yearsExperience} năm |`,
+    ),
     "",
     "Các tài khoản phòng khám dùng cùng mật khẩu ở trên. Chúng có quyền CLINIC_ADMIN và hồ sơ bác sĩ gắn với phòng khám tương ứng.",
     "",

@@ -51,6 +51,8 @@ interface Drug {
   description: Record<Locale, string>;
   species: string[];
   dosage: Record<Locale, string>;
+  administrationType: string;
+  tier: string;
   status: DrugStatus;
   icon: LucideIcon;
 }
@@ -204,7 +206,7 @@ const COPY = {
       caution: "Cần thận trọng",
       avoid: "Không sử dụng",
     },
-    dosage: "Liều tham khảo",
+    dosage: "Giá ước tính",
     results: "kết quả",
     emptyTitle: "Không tìm thấy mục phù hợp",
     emptyBody: "Thử từ khóa ngắn hơn hoặc chọn lại bộ lọc.",
@@ -269,7 +271,7 @@ const COPY = {
       caution: "Use with caution",
       avoid: "Do not use",
     },
-    dosage: "Reference dosage",
+    dosage: "Estimated price",
     results: "results",
     emptyTitle: "No matching entries",
     emptyBody: "Try a shorter search term or clear one of the filters.",
@@ -343,9 +345,11 @@ export function PharmacyExperience({ locale }: { locale: Locale }) {
     category: drug.category,
     description: { vi: drug.description ?? "", en: drug.description ?? "" },
     dosage: {
-      vi: drug.dosageInfo ?? "Theo chỉ định bác sĩ",
-      en: drug.dosageInfo ?? "Follow your veterinarian's directions",
+      vi: drug.dosageInfo,
+      en: drug.dosageInfo,
     },
+    administrationType: drug.administrationType,
+    tier: drug.tier,
     species: drug.applicableSpecies.map((value) => value.toLowerCase()),
     status: drug.toxicAlerts.length ? "avoid" : "caution",
     icon: drug.toxicAlerts.length ? ShieldAlert : Pill,
@@ -612,7 +616,7 @@ export function PharmacyExperience({ locale }: { locale: Locale }) {
 
           <div className="mt-7 flex items-center gap-3 text-sm font-medium text-[#676964] dark:text-[#b7b8b2]">
             <span>
-              {filteredDrugs.length} {copy.results}
+              {library.data?.total ?? 0} {copy.results}
             </span>
             <span
               className="h-px flex-1 bg-[#d1d2cc] dark:bg-white/10"
@@ -684,6 +688,15 @@ export function PharmacyExperience({ locale }: { locale: Locale }) {
                     <p className="mt-3 min-h-14 text-sm leading-6 text-[#5d5f59] dark:text-[#c6c7c0]">
                       {drug.description[locale]}
                     </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#4b4d48] dark:text-[#d6d7d0]">
+                      <span className="rounded-lg bg-[#deded8] px-2.5 py-1 dark:bg-white/10">
+                        {drug.administrationType}
+                      </span>
+                      <span className="rounded-lg bg-[#deded8] px-2.5 py-1 dark:bg-white/10">
+                        {drug.tier}
+                      </span>
+                    </div>
 
                     <div className="mt-7 grid gap-5 border-t border-[#d1d2cc] pt-5 dark:border-white/10 sm:grid-cols-[1fr_auto] sm:items-end">
                       <div>
