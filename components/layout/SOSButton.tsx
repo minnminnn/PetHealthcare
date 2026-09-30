@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -26,7 +27,7 @@ export function SOSButton() {
   );
   const [geoError, setGeoError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [showTriageChat, setShowTriageChat] = useState(false);
+  const [showTriageChat, setShowTriageChat] = useState(true);
 
   const { data: nearbyClinics, isLoading: clinicsLoading } =
     api.emergency.getNearestClinics.useQuery(
@@ -139,15 +140,7 @@ export function SOSButton() {
                       {t("title")}
                     </h2>
                     <p className="mt-1.5 flex items-center gap-1.5 text-xs leading-5 text-[#686963] dark:text-[#b6b7b2]">
-                      <LocateFixed
-                        className="h-3.5 w-3.5 shrink-0"
-                        aria-hidden="true"
-                      />
-                      {isLocating
-                        ? t("locating")
-                        : coords
-                          ? t("located")
-                          : t("subtitle")}
+                      {t("ai-help")}
                     </p>
                   </div>
                   <button
@@ -158,25 +151,6 @@ export function SOSButton() {
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>
-                </div>
-
-                <div
-                  role="tablist"
-                  aria-label={t("modeLabel")}
-                  className="mt-5 grid grid-cols-2 rounded-xl bg-black/[0.045] p-1 dark:bg-white/[0.06]"
-                >
-                  <ModeButton
-                    active={!showTriageChat}
-                    onClick={() => setShowTriageChat(false)}
-                    icon={Navigation}
-                    label={t("clinicsTab")}
-                  />
-                  <ModeButton
-                    active={showTriageChat}
-                    onClick={() => setShowTriageChat(true)}
-                    icon={Bot}
-                    label={t("triageTab")}
-                  />
                 </div>
               </header>
 
@@ -249,23 +223,6 @@ export function SOSButton() {
                           </div>
                         </motion.article>
                       ))}
-
-                    {nearbyClinics?.length === 0 &&
-                      !isLocating &&
-                      !clinicsLoading && (
-                        <div className="px-5 py-10 text-center">
-                          <MapPin
-                            className="mx-auto h-6 w-6 text-[#b9473e] dark:text-[#ef7569]"
-                            aria-hidden="true"
-                          />
-                          <h3 className="mt-4 text-sm font-semibold">
-                            {t("emptyTitle")}
-                          </h3>
-                          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[#686963] dark:text-[#b6b7b2]">
-                            {t("emptyBody")}
-                          </p>
-                        </div>
-                      )}
                   </div>
                 ) : (
                   <AITriagePanel
