@@ -225,11 +225,11 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
       ref={root}
       className="w-full max-w-full overflow-x-hidden bg-[#f3f3f0] text-[#20211f] dark:bg-[#171816] dark:text-[#f1f1ed]"
     >
-      <section className="px-4 pb-16 pt-24 sm:px-6 lg:px-8">
-        <div className="mx-auto grid min-h-[calc(100dvh-7rem)] max-w-7xl overflow-hidden rounded-2xl bg-[#deded8] dark:bg-[#242523] lg:grid-cols-[1.08fr_.92fr]">
+      <section className="relative z-20 px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+        <div className="mx-auto grid min-h-[calc(100dvh-7rem)] max-w-7xl overflow-visible rounded-2xl bg-[#deded8] dark:bg-[#242523] lg:grid-cols-[1.08fr_.92fr]">
           <div
             data-clinic-hero
-            className="flex flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12"
+            className="relative z-40 flex flex-col justify-between px-6 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12"
           >
             <div className="my-16 lg:my-10">
               <p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-[#b9473e] dark:text-[#ef7569]">
@@ -247,7 +247,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
               <label className="mb-2 block text-xs font-bold uppercase tracking-[0.13em] text-[#676964] dark:text-[#b7b8b2]">
                 {copy.searchLabel}
               </label>
-              <div className="flex min-h-16 items-center rounded-2xl border border-[#b0b1aa] bg-[#f8f8f5] shadow-[0_10px_30px_rgba(32,33,31,.07)] transition focus-within:border-[#b9473e] focus-within:ring-4 focus-within:ring-[#d85f53]/15 dark:border-white/15 dark:bg-[#171816] dark:shadow-none dark:focus-within:border-[#ef7569]">
+              <div className="flex min-h-16 items-center rounded-2xl border border-none bg-[#f8f8f5] shadow-[0_10px_30px_rgba(32,33,31,.07)] transition focus-within:border-[#b9473e] focus-within:ring-4 focus-within:ring-[#d85f53]/15 dark:border-white/15 dark:bg-[#171816] dark:shadow-none dark:focus-within:border-[#ef7569]">
                 <Search
                   className="ml-5 h-5 w-5 shrink-0 text-[#74766f] dark:text-[#92948d]"
                   strokeWidth={1.8}
@@ -269,7 +269,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                     window.setTimeout(() => setIsSearchFocused(false), 150)
                   }
                   placeholder={copy.searchPlaceholder}
-                  className="min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 py-4 text-base text-[#20211f] outline-none ring-0 placeholder:text-[#74766f] focus:outline-none focus:ring-0 dark:text-[#f1f1ed] dark:placeholder:text-[#92948d]"
+                  className="min-w-0 flex-1 appearance-none border-none bg-transparent px-3 py-4 text-base text-[#20211f] outline-none ring-transparent placeholder:text-[#74766f] focus:outline-none focus:ring-0 dark:text-[#f1f1ed] dark:placeholder:text-[#92948d]"
                 />
                 {query && (
                   <button
@@ -306,7 +306,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
               )}
 
               {showSuggestionPanel && (
-                <div className="absolute inset-x-0 top-[calc(100%+.6rem)] z-30 max-h-80 overflow-y-auto rounded-2xl border border-[#c4c5be] bg-[#f8f8f5] p-2 shadow-2xl dark:border-white/15 dark:bg-[#20211f]">
+                <div className="absolute inset-x-0 top-[calc(100%+.6rem)] z-[200] max-h-80 overflow-y-auto rounded-2xl border border-[#c4c5be] bg-[#f8f8f5] p-2 shadow-2xl dark:border-white/15 dark:bg-[#20211f]">
                   <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#74766f] dark:text-[#92948d]">
                     {copy.locationHint}
                   </p>
@@ -357,7 +357,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
             </div>
           </div>
 
-          <div className="group relative min-h-[28rem] overflow-hidden lg:min-h-full">
+          <div className="group relative min-h-[28rem] overflow-hidden rounded-b-2xl lg:min-h-full lg:rounded-bl-none lg:rounded-r-2xl">
             <Image
               src="/images/petcare-consultation.webp"
               alt=""
@@ -371,7 +371,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="px-4 pb-28 pt-8 sm:px-6 md:pb-40 lg:px-8">
+      <section className="relative z-10 px-4 pb-28 pt-8 sm:px-6 md:pb-40 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-14">
             <div className="lg:col-span-7">
@@ -410,7 +410,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                         className={`rounded-2xl border p-5 transition sm:p-6 ${
                           focused
                             ? "border-[#d85f53] bg-[#eee4e1] shadow-[0_14px_35px_rgba(32,33,31,.08)] dark:bg-[#2b2220]"
-                            : "border-[#c4c5be] bg-[#f8f8f5] hover:border-[#a6a8a0] dark:border-white/12 dark:bg-[#20211f] dark:hover:border-white/25"
+                            : "border-[#c4c5be] bg-[#f8f8f5] hover:border-[#a6a8a0] dark:border-white/12 dark:text-white dark:bg-[#20211f] dark:hover:border-white/25"
                         }`}
                       >
                         <div className="flex items-start gap-4">
@@ -421,7 +421,7 @@ export function ClinicsExperience({ locale }: { locale: Locale }) {
                             <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-[#b9473e] dark:text-[#ef7569]">
                               {copy.source}
                             </p>
-                            <h2 className="mt-2 text-xl font-semibold leading-tight tracking-[-0.025em] sm:text-2xl">
+                            <h2 className="mt-2 text-xl font-semibold leading-tight tracking-[-0.025em] sm:text-2xl dark:text-white ">
                               {clinic.name}
                             </h2>
                             <p className="mt-2 flex items-start gap-2 text-sm leading-6 text-[#676964] dark:text-[#b7b8b2]">
